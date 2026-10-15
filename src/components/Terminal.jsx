@@ -4,6 +4,7 @@ import { bus } from '../lib/bus';
 import { getLenis, scrollTo } from '../lib/lenis';
 import { projects } from '../data/projects';
 import { crew } from '../data/crew';
+import { crewStatus } from '../lib/CrewScene';
 
 const SECTIONS = { top: '#top', about: '#about', projects: '#projects', crew: '#crew', lab: '#lab', signal: '#signal' };
 const PROMPT = 'visitor@abyss:~$';
@@ -255,6 +256,26 @@ export default function Terminal() {
           setTimeout(() => bus.emit('deep:open'), 150);
         }, 700);
         break;
+      case 'debug': {
+        // what the browser's graphics look like, and how each crew object is doing
+        let gpu = 'no webgl';
+        try {
+          const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+          const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+          gpu = gl ? `${gl instanceof WebGL2RenderingContext ? 'webgl2' : 'webgl1'} · ${ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'renderer hidden'}` : 'no webgl';
+        } catch (err) {
+          gpu = 'webgl error: ' + err.message;
+        }
+        print(
+          `gpu      ${gpu}`,
+          `screen   ${window.innerWidth}×${window.innerHeight} @ ${window.devicePixelRatio}x · ${navigator.userAgent.match(/(Chrome|Firefox|Safari)\/[\d.]+/)?.[0] ?? 'unknown browser'}`,
+          `crew     ${crewStatus.length} objects`
+        );
+        crewStatus.forEach(c =>
+          print(`  ${c.name.toLowerCase().padEnd(12)} ${c.form.padEnd(10)} ${c.ok ? 'ok' : 'FAILED'}  visible:${c.visible ? 'y' : 'n'}  born:${c.born ? 'y' : 'n'}${c.error ? '  ' + c.error : ''}`)
+        );
+        break;
+      }
       case 'abyss':
         print('you are already here.');
         break;

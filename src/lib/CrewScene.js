@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { gsap } from './gsap';
 
-// One WebGL canvas draws every crew member's object. Each card gets its own
-// scene + camera, rendered into that card's rectangle with scissor tests
-// (the "multiple views" technique), so 4 objects cost 1 GPU context.
+// Each crew card gets its own small WebGL canvas with one particle object.
+// The canvas covers the card, so bursts can spill past the slot but never
+// outside the card, and there's no page-scroll maths to get wrong.
 
 const vertex = /* glsl */ `
   uniform float uTime;
@@ -59,7 +59,10 @@ const fragment = /* glsl */ `
     float d = length(gl_PointCoord - 0.5);
     float strength = pow(1.0 - smoothstep(0.0, 0.5, d), 2.2);
     if (strength < 0.01) discard;
-    gl_FragColor = vec4(vColor * strength, 1.0);
+    // valid premultiplied output: alpha >= every colour channel. (colour with
+    // zero alpha renders in some Chrome setups and vanishes in others)
+    vec3 c = min(vColor * strength, vec3(1.0));
+    gl_FragColor = vec4(c, max(max(c.r, c.g), c.b));
   }
 `;
 
@@ -179,26 +182,25 @@ const FORMS = {
 
 export const formLabel = form => (FORMS[form] ?? FORMS.spiral).label;
 
-export class CrewScene {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
-    this.count = this.mobile ? 4500 : 9000;
+// what each object is doing, for the terminal's `debug` command
+export const crewStatus = [];
+
+export class CrewObject {
+  constructor(canvas, slot, { name, color, form }) {
+    this.canvas = canvas; // covers the whole card
+    this.slot = slot; // where the object sits inside the card
+    this.status = { name, form, ok: false, visible: false, born: false, error: null };
+    crewStatus.push(this.status);
+
+    const mobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+    const n = mobile ? 4500 : 9000;
+    this.dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
-    this.dpr = Math.min(window.devicePixelRatio || 1, this.mobile ? 1.5 : 2);
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.setClearColor(0x000000, 0);
-    this.renderer.autoClear = false;
-    this.views = [];
-    this.time = 0;
-    this.active = false;
-    this.resize();
-  }
 
-  addView({ el, frame, name, color, form }) {
     const kind = FORMS[form] ?? FORMS.spiral;
     const rand = seeded(name.toLowerCase());
-    const n = this.count;
     const positions = new Float32Array(n * 3);
     const scales = new Float32Array(n);
     const speeds = new Float32Array(n);
@@ -214,14 +216,14 @@ export class CrewScene {
     };
     kind.build(n, rand, put);
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
-    geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
-    geometry.setAttribute('aFlow', new THREE.BufferAttribute(flows, 1));
-    geometry.setAttribute('aTint', new THREE.BufferAttribute(tints, 2));
+    this.geometry = new THREE.BufferGeometry();
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    this.geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
+    this.geometry.setAttribute('aFlow', new THREE.BufferAttribute(flows, 1));
+    this.geometry.setAttribute('aTint', new THREE.BufferAttribute(tints, 2));
 
-    const uniforms = {
+    this.uniforms = {
       uTime: { value: 0 },
       uSize: { value: 22 },
       uPixelRatio: { value: this.dpr },
@@ -230,113 +232,98 @@ export class CrewScene {
       uBurst: { value: 0 },
       uColor: { value: new THREE.Color(color) }
     };
-    const material = new THREE.ShaderMaterial({
+    this.material = new THREE.ShaderMaterial({
       vertexShader: vertex,
       fragmentShader: fragment,
-      uniforms,
+      uniforms: this.uniforms,
       transparent: true,
       depthWrite: false,
-      // pure light: add colour, never touch the canvas alpha. This canvas sits
-      // *on top of* the cards, so any alpha would show up as dark smudges.
+      // pure additive light, with alpha accumulated the same way
       blending: THREE.CustomBlending,
       blendEquation: THREE.AddEquation,
       blendSrc: THREE.OneFactor,
       blendDst: THREE.OneFactor,
-      blendSrcAlpha: THREE.ZeroFactor,
+      blendSrcAlpha: THREE.OneFactor,
       blendDstAlpha: THREE.OneFactor
     });
-    const points = new THREE.Points(geometry, material);
+    const points = new THREE.Points(this.geometry, this.material);
     points.frustumCulled = false;
 
-    const scene = new THREE.Scene();
-    const group = new THREE.Group();
-    group.add(points);
-    scene.add(group);
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
-    camera.position.set(0, 0, 8.4);
+    this.scene = new THREE.Scene();
+    this.group = new THREE.Group();
+    this.group.add(points);
+    this.scene.add(this.group);
+    this.camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
+    this.camera.position.set(0, 0, 8.4);
 
-    const view = {
-      el, // where the object sits
-      frame, // the card: drawing is clipped to it, so bursts can spill past the slot
-      scene,
-      camera,
-      group,
-      uniforms,
-      geometry,
-      material,
-      base: kind.tilt,
-      tilt: { x: 0, y: 0 },
-      offset: rand() * 100
-    };
-    this.views.push(view);
-    return view;
+    this.base = kind.tilt;
+    this.tilt = { x: 0, y: 0 };
+    this.time = rand() * 100;
+    this.size = [0, 0];
+    this.status.ok = true;
+    gsap.ticker.add(this.render);
+  }
+
+  set visible(on) {
+    this.status.visible = on;
+    this._visible = on;
   }
 
   // ── interactions (all GSAP) ──
-  birth(view, delay = 0) {
-    if (view.born) return;
-    view.born = true;
-    gsap.fromTo(view.uniforms.uExpand, { value: 0 }, { value: 1, duration: 2.4, delay, ease: 'expo.out' });
+  birth(delay = 0) {
+    if (this.status.born) return;
+    this.status.born = true;
+    gsap.fromTo(this.uniforms.uExpand, { value: 0 }, { value: 1, duration: 2.4, delay, ease: 'expo.out' });
   }
 
-  hover(view, on) {
-    gsap.to(view.uniforms.uHover, { value: on ? 1 : 0, duration: on ? 0.6 : 1.2, ease: 'power3.out' });
+  hover(on) {
+    gsap.to(this.uniforms.uHover, { value: on ? 1 : 0, duration: on ? 0.6 : 1.2, ease: 'power3.out' });
   }
 
-  ping(view) {
+  ping() {
     gsap
       .timeline()
-      .to(view.uniforms.uBurst, { value: 1, duration: 0.35, ease: 'power3.out', overwrite: true })
-      .to(view.uniforms.uBurst, { value: 0, duration: 1.6, ease: 'elastic.out(1, 0.35)' });
+      .to(this.uniforms.uBurst, { value: 1, duration: 0.35, ease: 'power3.out', overwrite: true })
+      .to(this.uniforms.uBurst, { value: 0, duration: 1.6, ease: 'elastic.out(1, 0.35)' });
   }
 
-  resize = () => {
+  // gsap.ticker callback: only draws while the card is on screen
+  render = (_, deltaMs) => {
+    if (!this._visible) return;
+    this.time += Math.min(deltaMs / 1000, 0.05);
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
-    if (w && h) this.renderer.setSize(w, h, false);
-    this.height = h;
-  };
-
-  // gsap.ticker callback
-  tick = (_, deltaMs) => {
-    if (!this.active) return;
-    const dt = Math.min(deltaMs / 1000, 0.05);
-    this.time += dt;
-    const r = this.renderer;
-    r.setScissorTest(false);
-    r.clear();
-    r.setScissorTest(true);
-    const H = this.height;
-
-    for (const v of this.views) {
-      const slot = v.el.getBoundingClientRect();
-      const card = v.frame.getBoundingClientRect();
-      if (card.bottom < 0 || card.top > H || slot.width === 0) continue;
-
-      // viewport = slot grown on every side (so the object can be big),
-      // scissor = the card (so nothing draws outside it)
-      const pad = slot.width * 0.3;
-      const vw = slot.width + pad * 2;
-      const vh = slot.height + pad * 2;
-      r.setViewport(slot.left - pad, H - slot.bottom - pad, vw, vh);
-      r.setScissor(card.left, H - card.bottom, card.width, card.height);
-      v.camera.aspect = vw / vh;
-      v.camera.updateProjectionMatrix();
-
-      v.uniforms.uTime.value = this.time + v.offset;
-      v.group.rotation.set(v.base[0] + v.tilt.y * 0.5, v.base[1] + v.tilt.x * 0.7, v.base[2]);
-      r.render(v.scene, v.camera);
+    if (!w || !h) return;
+    if (w !== this.size[0] || h !== this.size[1]) {
+      this.size = [w, h];
+      this.renderer.setSize(w, h, false);
     }
+
+    // aim the camera's viewport at the slot (grown so the object can be big);
+    // anything spilling past it is still inside this card-sized canvas
+    const card = this.canvas.getBoundingClientRect();
+    const slot = this.slot.getBoundingClientRect();
+    const pad = slot.width * 0.3;
+    const vw = slot.width + pad * 2;
+    const vh = slot.height + pad * 2;
+    const x = slot.left - card.left - pad;
+    const y = card.bottom - slot.bottom - pad; // GL counts from the bottom
+    this.renderer.setViewport(x, y, vw, vh);
+    this.camera.aspect = vw / vh;
+    this.camera.updateProjectionMatrix();
+
+    this.uniforms.uTime.value = this.time;
+    this.group.rotation.set(this.base[0] + this.tilt.y * 0.5, this.base[1] + this.tilt.x * 0.7, this.base[2]);
+    this.renderer.render(this.scene, this.camera);
   };
 
   dispose() {
-    for (const v of this.views) {
-      gsap.killTweensOf([v.uniforms.uExpand, v.uniforms.uHover, v.uniforms.uBurst, v.tilt]);
-      v.geometry.dispose();
-      v.material.dispose();
-    }
-    // no forceContextLoss(): on a hot reload React keeps this same <canvas>,
-    // and a canvas whose context was killed can never render again
-    this.renderer.dispose();
+    gsap.ticker.remove(this.render);
+    gsap.killTweensOf([this.uniforms.uExpand, this.uniforms.uHover, this.uniforms.uBurst, this.tilt]);
+    this.geometry.dispose();
+    this.material.dispose();
+    this.renderer.dispose(); // canvas may be reused on hot reload: don't force context loss
+    const i = crewStatus.indexOf(this.status);
+    if (i >= 0) crewStatus.splice(i, 1);
   }
 }

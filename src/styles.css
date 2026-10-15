@@ -1025,13 +1025,13 @@ kbd {
   margin: 0.75rem 0 0.25rem;
 }
 
-/* one fixed canvas draws all four objects, clipped to each card */
-.crew__canvas {
-  position: fixed;
+/* each card's own WebGL canvas, covering the card (bursts stay inside it) */
+.crew__gl {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 3;
+  z-index: 1;
   pointer-events: none;
 }
 
