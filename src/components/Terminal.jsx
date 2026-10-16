@@ -5,6 +5,7 @@ import { getLenis, scrollTo } from '../lib/lenis';
 import { projects } from '../data/projects';
 import { crew } from '../data/crew';
 import { crewStatus } from '../lib/CrewScene';
+import { sfx, isSoundOn, setSound, getVolume, setVolume } from '../lib/audio';
 
 const SECTIONS = { top: '#top', about: '#about', projects: '#projects', crew: '#crew', lab: '#lab', signal: '#signal' };
 const PROMPT = 'visitor@abyss:~$';
@@ -19,6 +20,8 @@ const HELP = `available commands:
   warp                  engage hyperdrive
   pulse                 send a shockwave through the galaxy
   tint <color|reset>    recolor the galaxy   e.g. tint #ff3366
+  sound [on|off]        music + sound effects (or press M)
+  volume <0-100>        how loud the abyss is
   galaxy [--branches n] [--spin x] [--randomness x]
   whoami                who are you, really
   date                  current time
@@ -29,7 +32,7 @@ const HELP = `available commands:
 psst: not every command is listed.`;
 
 // one-tap commands (mostly for phones, where typing is a chore)
-const QUICK = ['help', 'projects', 'crew', 'warp', 'pulse', 'stare', 'tint random', 'whoami', 'clear'];
+const QUICK = ['help', 'projects', 'crew', 'warp', 'pulse', 'stare', 'tint random', 'sound', 'whoami', 'clear'];
 
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
 
@@ -63,8 +66,10 @@ export default function Terminal() {
   const input = useRef(null);
   const out = useRef(null);
 
-  const print = (...entries) =>
+  const print = (...entries) => {
+    if (entries.some(e => e?.cls === 'c-err')) sfx.error();
     setLines(l => [...l, ...entries.map(e => (typeof e === 'string' ? { text: e } : e))].slice(-200));
+  };
 
   // open with ~ or ` (but not while typing somewhere else), close with Esc.
   // typing "help" anywhere on the page also opens it and runs help.
@@ -94,8 +99,11 @@ export default function Terminal() {
     };
   }, []);
 
+  const wasOpen = useRef(false);
   useEffect(() => {
     const lenis = getLenis();
+    if (open !== wasOpen.current) (open ? sfx.termOpen : sfx.termClose)();
+    wasOpen.current = open;
     if (open) {
       lenis?.stop();
       gsap.fromTo(panel.current, { opacity: 0, y: 30, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'expo.out' });
@@ -212,6 +220,38 @@ export default function Terminal() {
         );
         break;
       }
+      case 'sound':
+      case 'music':
+      case 'mute': {
+        const arg = cmd.toLowerCase() === 'mute' ? 'off' : args[0]?.toLowerCase();
+        if (arg === 'on' || arg === 'off') setSound(arg === 'on');
+        else if (arg) {
+          print({ text: 'usage: sound [on|off]', cls: 'c-err' });
+          break;
+        } else setSound(!isSoundOn());
+        print(
+          isSoundOn()
+            ? '♪ sound on. a drone, the sea, and things that glow. it darkens as you descend.'
+            : '♪ sound off. silence, as deep as it goes.'
+        );
+        break;
+      }
+      case 'volume':
+      case 'vol': {
+        if (args[0] === undefined) {
+          print(`volume ${Math.round(getVolume() * 100)}`);
+          break;
+        }
+        const v = parseInt(args[0], 10);
+        if (Number.isNaN(v)) {
+          print({ text: 'usage: volume <0-100>', cls: 'c-err' });
+          break;
+        }
+        setVolume(v / 100);
+        if (!isSoundOn() && v > 0) setSound(true);
+        print(`volume ${Math.round(getVolume() * 100)}`);
+        break;
+      }
       case 'date':
         print(new Date().toString());
         break;
@@ -286,6 +326,8 @@ export default function Terminal() {
 
   const onKeyDown = e => {
     const h = history.current;
+    if (e.key === 'Enter') sfx.enter();
+    else if (e.key.length === 1 || e.key === 'Backspace') sfx.type();
     if (e.key === 'Enter') {
       run(value);
       setValue('');
@@ -299,7 +341,7 @@ export default function Terminal() {
       setValue(cursor.current < 0 ? '' : h[cursor.current]);
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      const cmds = ['help', 'ls', 'cd', 'projects', 'crew', 'open', 'warp', 'pulse', 'tint', 'galaxy', 'whoami', 'date', 'echo', 'history', 'clear', 'exit'];
+      const cmds = ['help', 'ls', 'cd', 'projects', 'crew', 'open', 'warp', 'pulse', 'tint', 'galaxy', 'sound', 'volume', 'whoami', 'date', 'echo', 'history', 'clear', 'exit'];
       const match = cmds.find(c => c.startsWith(value.trim()));
       if (match && value.trim()) setValue(match + ' ');
     } else if (e.key === 'l' && e.ctrlKey) {

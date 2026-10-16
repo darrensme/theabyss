@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { gsap, useGSAP } from '../lib/gsap';
+import { sfx } from '../lib/audio';
 
 // "// projects"-style heading that decrypts itself when it scrolls into view
 export default function CodeHeading({ children, index, note }) {
@@ -13,7 +14,7 @@ export default function CodeHeading({ children, index, note }) {
       gsap.to(word, {
         duration: 1.4,
         scrambleText: { text, chars: '01<>/{}[]_#', revealDelay: 0.3, speed: 0.6 },
-        scrollTrigger: { trigger: ref.current, start: 'top 85%', once: true }
+        scrollTrigger: { trigger: ref.current, start: 'top 85%', once: true, onEnter: () => sfx.reveal() }
       });
       gsap.from(ref.current.querySelectorAll('.code-h__meta'), {
         opacity: 0,

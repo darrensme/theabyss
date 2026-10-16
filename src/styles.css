@@ -383,8 +383,93 @@ kbd {
   box-shadow: 0 0 20px -4px var(--accent);
 }
 
+/* sound toggle: equaliser bars that dance while it's on */
+.snd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(7, 6, 15, 0.55);
+  color: var(--muted);
+  font-size: inherit;
+  cursor: pointer;
+  transition: color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.snd:hover {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+.snd.is-on {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+.snd.is-fresh {
+  animation: snd-call 2.6s ease-in-out infinite;
+}
+@keyframes snd-call {
+  50% { box-shadow: 0 0 18px -3px var(--accent-2); border-color: rgba(127, 227, 255, 0.45); }
+}
+.snd__bars {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.snd__bars i {
+  width: 2px;
+  height: 5px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.6;
+  transition: height 0.4s var(--ease-out), opacity 0.3s;
+}
+/* muted: still bars with a line through them */
+.snd__bars i:nth-child(2) { height: 9px; }
+.snd__bars i:nth-child(3) { height: 6px; }
+.snd__bars i:nth-child(4) { height: 11px; }
+.snd__bars::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 50%;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--err);
+  transform: rotate(-38deg);
+  transition: opacity 0.3s, transform 0.4s var(--ease-out);
+}
+.snd.is-on .snd__bars::after {
+  opacity: 0;
+  transform: rotate(-38deg) scaleX(0);
+}
+.snd.is-on .snd__bars i {
+  opacity: 1;
+}
+.snd.is-on .snd__bars i {
+  background: var(--accent-2);
+  box-shadow: 0 0 6px var(--accent-2);
+  animation: snd-eq 1.1s ease-in-out infinite alternate;
+}
+.snd.is-on .snd__bars i:nth-child(2) { animation-duration: 0.8s; animation-delay: -0.4s; }
+.snd.is-on .snd__bars i:nth-child(3) { animation-duration: 1.3s; animation-delay: -0.9s; }
+.snd.is-on .snd__bars i:nth-child(4) { animation-duration: 0.95s; animation-delay: -0.2s; }
+@keyframes snd-eq {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snd.is-on .snd__bars i { animation: none; height: 8px; }
+  .snd.is-fresh { animation: none; }
+}
+
 @media (max-width: 720px) {
   .hud__nav a { display: none; }
+  .snd__label { display: none; }
+  .snd { padding: 0.55rem 0.6rem; }
 }
 
 .depth {

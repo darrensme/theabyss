@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { scrollTo } from '../lib/lenis';
 import { bus } from '../lib/bus';
+import SoundToggle from './SoundToggle';
 
 // Challenger Deep, the deepest known point in the ocean: the bottom of the page
 const MAX_DEPTH = 10935;
@@ -65,6 +66,7 @@ export default function HUD() {
               {item.label}
             </a>
           ))}
+          <SoundToggle />
           <button className="hud__term" onClick={() => bus.emit('terminal:open')} aria-label="Open terminal">
             <span className="term-icon" aria-hidden="true">
               &gt;<i>_</i>

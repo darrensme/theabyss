@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { gsap, SplitText, useGSAP } from '../lib/gsap';
 import { scrollTo } from '../lib/lenis';
 import { bus, toast } from '../lib/bus';
+import { sfx } from '../lib/audio';
 
 const GLYPHS = '!<>-_\\/[]{}—=+*^?#░▒▓';
 
@@ -67,6 +68,7 @@ export default function Hero({ active }) {
   // easter egg: knock on the title enough times and something happens
   const onTitleClick = () => {
     const n = ++clicks.current;
+    sfx.knock();
     const chars = root.current.querySelectorAll('.hero__char');
     const c = chars[Math.floor(Math.random() * chars.length)];
     if (c) {

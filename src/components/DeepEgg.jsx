@@ -3,6 +3,7 @@ import { gsap } from '../lib/gsap';
 import { bus, toast } from '../lib/bus';
 import { getLenis, scrollTo } from '../lib/lenis';
 import { EyeRenderer } from '../lib/EyeRenderer';
+import { sfx } from '../lib/audio';
 
 // ─────────────────────────────────────────────────────────────
 //  Secret: at the very bottom of the page, keep scrolling down
@@ -133,6 +134,7 @@ export default function DeepEgg() {
 
   function breakThrough(quick = false) {
     getLenis()?.stop();
+    sfx.shatter();
     bus.emit('galaxy:warp');
     bus.emit('galaxy:tint', '#ff1e3c');
     gsap.set('.signal > *', { y: 0 });
@@ -149,6 +151,7 @@ export default function DeepEgg() {
   // ── the room below the floor ──
   useEffect(() => {
     if (!open) return;
+    bus.emit('deep:enter');
     const root = overlay.current;
     const canvas = eye.current;
     let gl = null;
@@ -203,12 +206,14 @@ export default function DeepEgg() {
       window.removeEventListener('pointermove', follow);
       window.removeEventListener('pointerdown', follow);
       window.removeEventListener('keydown', onKey);
+      bus.emit('deep:exit');
     };
   }, [open]);
 
   const stareBack = () => {
     const msg = overlay.current.querySelector('.deep__reply');
     eyeGL.current?.stare();
+    sfx.dread();
     bus.emit('galaxy:pulse', 2);
     gsap.to(msg, { text: { value: '> …it blinked first.' }, duration: 0.8, ease: 'none', delay: 1.75 });
   };

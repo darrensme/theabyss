@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { gsap, useGSAP } from '../lib/gsap';
 import { bus } from '../lib/bus';
+import { sfx } from '../lib/audio';
 
 // characters per second while "typing"
 const CPS = 26;
@@ -31,7 +32,7 @@ export default function Loader({ onReveal, onDone }) {
 
       const type = (target, text, pause = 0.25) => {
         const tl = gsap.timeline({ paused: true });
-        tl.to(target, { text: { value: text }, duration: text.length / CPS, ease: 'none' }).to({}, { duration: pause });
+        tl.to(target, { text: { value: text }, duration: text.length / CPS, ease: 'none', onUpdate: sfx.type }).to({}, { duration: pause });
         timelines.push(tl);
         tl.timeScale(speed).play();
         return tl.then();
@@ -87,6 +88,7 @@ export default function Loader({ onReveal, onDone }) {
 
         // exit: the terminal collapses into a single point, the galaxy is born
         onReveal?.();
+        sfx.descend();
         gsap
           .timeline({ onComplete: () => onDone?.() })
           .to(screen, { scale: 0.96, opacity: 0, filter: 'blur(6px)', duration: 0.6, ease: 'power2.in' })

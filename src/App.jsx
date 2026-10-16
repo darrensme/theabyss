@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollTrigger } from './lib/gsap';
 import { initLenis, destroyLenis } from './lib/lenis';
 import { bus } from './lib/bus';
+import { initAudio } from './lib/audio';
 import { useEasterEggs } from './hooks/useEasterEggs';
 import ClickSpark from './components/reactbits/ClickSpark';
 import Loader from './components/Loader';
@@ -30,7 +31,11 @@ export default function App() {
     window.scrollTo(0, 0);
     const lenis = initLenis();
     lenis.stop();
-    return () => destroyLenis();
+    const stopAudio = initAudio();
+    return () => {
+      destroyLenis();
+      stopAudio();
+    };
   }, []);
 
   useEffect(() => {
