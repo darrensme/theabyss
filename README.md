@@ -32,6 +32,9 @@ The locked "coming soon" card is always added at the end automatically.
 | `src/components/Terminal.jsx` | hidden terminal (press `~`) |
 | `src/components/reactbits/` | components from reactbits.dev (JS + CSS variants) |
 | `src/styles.css` | all styles; colours are at the top |
+| `src/lib/audio.js` | music + sound effects, all synthesised with Web Audio (toggle: HUD button, `M`, or `sound` in the terminal) |
+| `vite.config.js` | `SITE_URL`: the live domain, used for `/sitemap.xml`, `/robots.txt` and link-preview tags |
+| `public/og.jpg` | the image shown when the link is shared (1200×630) |
 
 ## Easter eggs
 
