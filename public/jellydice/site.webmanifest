@@ -1,0 +1,13 @@
+{
+  "name": "Jelly / Dice",
+  "short_name": "Jelly Dice",
+  "start_url": "/jellydice/",
+  "scope": "/jellydice/",
+  "display": "standalone",
+  "background_color": "#e9e7e3",
+  "theme_color": "#e9e7e3",
+  "icons": [
+    { "src": "/jellydice/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/jellydice/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

@@ -15,6 +15,10 @@ function seo() {
     <loc>${SITE_URL}/</loc>
     <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>
   </url>
+  <url>
+    <loc>${SITE_URL}/jellydice/</loc>
+    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>
+  </url>
 </urlset>
 `,
     'robots.txt': `User-agent: *

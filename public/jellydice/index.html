@@ -1,6 +1,34 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jelly / Dice</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Gummy 3D dice with real physics. Pick a flavor, throw them, watch them bounce and wobble.">
+<meta name="theme-color" content="#e9e7e3">
+<link rel="canonical" href="https://theabyssme.com/jellydice/">
+
+<!-- icons -->
+<link rel="icon" type="image/svg+xml" href="/jellydice/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/jellydice/favicon-32.png">
+<link rel="apple-touch-icon" href="/jellydice/apple-touch-icon.png">
+<link rel="manifest" href="/jellydice/site.webmanifest">
+
+<!-- link previews (iMessage, Discord, X, WhatsApp, Slack…) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Abyss">
+<meta property="og:title" content="Jelly / Dice">
+<meta property="og:description" content="Gummy 3D dice with real physics. Pick a flavor, throw them, watch them bounce and wobble.">
+<meta property="og:url" content="https://theabyssme.com/jellydice/">
+<meta property="og:image" content="https://theabyssme.com/jellydice/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Three see-through gummy dice in strawberry, lime and blue raspberry beside the title Jelly / Dice">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Jelly / Dice">
+<meta name="twitter:description" content="Gummy 3D dice with real physics. Pick a flavor, throw them, watch them bounce and wobble.">
+<meta name="twitter:image" content="https://theabyssme.com/jellydice/og.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
@@ -24,7 +52,7 @@
   color-scheme: light;
 }
 html, body { height: 100%; overflow: hidden; }
-body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
 #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
 
@@ -41,7 +69,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-
 /* Title block */
 .head { position: absolute; top: calc(28px + env(safe-area-inset-top, 0px)); left: max(28px, env(safe-area-inset-left, 0px)); max-width: min(560px, calc(100% - 300px)); pointer-events: none; }
 .head h1 { font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(56px, 7.4vw, 118px); line-height: .9; letter-spacing: -.015em; margin: 14px 0 0; }
-.head h1 span { display: block; }
+.head h1 > span { display: block; }
 .head h1 .l2 { padding-left: .34em; }
 .head h1 .slash { color: var(--flavor); transition: color .4s; }
 .head p.lede { margin: 18px 0 0; max-width: 34ch; color: var(--muted); font-size: 13px; line-height: 1.55; }
@@ -155,7 +183,7 @@ input[type="range"]:focus-visible { outline: 1.5px solid var(--ink); outline-off
 .w-inner { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; max-width: 640px; transition: transform .7s cubic-bezier(.6, 0, .3, 1); }
 .welcome.gone .w-inner { transform: translateY(-24px) scale(.98); }
 .w-title { font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(76px, 15vw, 168px); line-height: .86; letter-spacing: -.02em; margin: 0; }
-.w-title span { display: block; }
+.w-title > span { display: block; }
 .w-title .l2 { padding-left: .34em; }
 .w-title .slash { color: var(--flavor); }
 .w-lede { margin: 0; max-width: 36ch; font-size: 14px; color: var(--muted); }
@@ -194,6 +222,8 @@ input[type="range"]:focus-visible { outline: 1.5px solid var(--ink); outline-off
 }
 @media (prefers-reduced-motion: reduce) { .result.pop { animation: none; } }
 </style>
+</head>
+<body>
 
 <canvas id="scene" tabindex="0" aria-label="Dice. Tap empty space to throw, or drag a die to toss it."></canvas>
 
@@ -991,5 +1021,5 @@ input[type="range"]:focus-visible { outline: 1.5px solid var(--ink); outline-off
   requestAnimationFrame(frame);
 })();
 </script>
-
-</body></html>
+</body>
+</html>
