@@ -12,6 +12,7 @@ import Hero from './components/Hero';
 import Ticker from './components/Ticker';
 import Manifesto from './components/Manifesto';
 import Projects from './components/Projects';
+import SmallProjects from './components/SmallProjects';
 import Crew from './components/Crew';
 import Lab from './components/Lab';
 import Footer from './components/Footer';
@@ -72,6 +73,7 @@ export default function App() {
             <Ticker />
             <Manifesto />
             <Projects />
+            <SmallProjects />
             <Crew />
             <Lab />
           </main>

@@ -22,3 +22,24 @@ export const projects = [
     status: 'live'
   }
 ];
+
+// ─────────────────────────────────────────────────────────────
+//  SMALL PROJECTS: toys, experiments, one-page things.
+//  Same idea: copy a block, change the fields, save.
+//
+//  name         title (shown in italic serif)
+//  url          where the card links (opens in a new tab)
+//  image        a screenshot in /public, ideally 16:9 (e.g. '/projects/thing.jpg')
+//  description  one short sentence
+//  tags         a few short words
+// ─────────────────────────────────────────────────────────────
+
+export const smallProjects = [
+  {
+    name: 'Jelly / Dice',
+    url: 'https://theabyssme.com/jellydice',
+    image: '/projects/jellydice.jpg',
+    description: 'Gummy dice with real physics. Throw them, poke them, watch them wobble.',
+    tags: ['webgl', 'toy']
+  }
+];

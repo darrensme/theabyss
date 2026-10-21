@@ -10,7 +10,7 @@ const pad = n => String(n).padStart(2, '0');
 const CARD_SURFACE = { '--spotlight-card-surface': 'rgba(9, 8, 20, 0.82)' };
 
 // shared: cards rise in on scroll and tilt toward the cursor (desktop only)
-function useCardMotion(ref, index) {
+export function useCardMotion(ref, index) {
   useGSAP(
     () => {
       const card = ref.current;

@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from '../lib/gsap';
 import { bus } from '../lib/bus';
 import { getLenis, scrollTo } from '../lib/lenis';
-import { projects } from '../data/projects';
+import { projects, smallProjects } from '../data/projects';
 import { crew } from '../data/crew';
 import { crewStatus } from '../lib/CrewScene';
 import { sfx, isSoundOn, setSound, getVolume, setVolume } from '../lib/audio';
 
-const SECTIONS = { top: '#top', about: '#about', projects: '#projects', crew: '#crew', lab: '#lab', signal: '#signal' };
+const SECTIONS = { top: '#top', about: '#about', projects: '#projects', small: '#small-projects', crew: '#crew', lab: '#lab', signal: '#signal' };
 const PROMPT = 'visitor@abyss:~$';
 
 const HELP = `available commands:
@@ -158,6 +158,8 @@ export default function Terminal() {
       case 'projects':
         projects.forEach((p, i) => print(`${String(i + 1).padStart(2, '0')}  ${p.name.padEnd(16)} ${p.url}`));
         print({ text: `${String(projects.length + 1).padStart(2, '0')}  ??????           [locked]`, cls: 'c-dim' });
+        print({ text: 'small projects:', cls: 'c-dim' });
+        smallProjects.forEach((p, i) => print(`s${String(i + 1).padStart(2, '0')} ${p.name.padEnd(16)} ${p.url}`));
         break;
       case 'crew':
       case 'who':
@@ -167,7 +169,7 @@ export default function Terminal() {
         break;
       case 'open': {
         const q = slug(rest);
-        const hit = q && projects.find(p => slug(p.name).includes(q));
+        const hit = q && [...projects, ...smallProjects].find(p => slug(p.name).includes(q));
         if (hit) {
           print(`opening ${hit.url} ...`);
           window.open(hit.url, '_blank', 'noopener,noreferrer');

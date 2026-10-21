@@ -147,7 +147,7 @@ function Member({ member, index }) {
 export default function Crew() {
   return (
     <section className="crew section" id="crew">
-      <CodeHeading index="03" note={`who --all → ${crew.length} signals online. tap one to ping it.`}>
+      <CodeHeading index="04" note={`who --all → ${crew.length} signals online. tap one to ping it.`}>
         crew
       </CodeHeading>
 

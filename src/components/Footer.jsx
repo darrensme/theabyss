@@ -29,7 +29,7 @@ export default function Footer() {
 
   return (
     <footer className="signal section" id="signal" ref={ref}>
-      <CodeHeading index="05" note="echo $DEPTH → 10935m · challenger deep">
+      <CodeHeading index="06" note="echo $DEPTH → 10935m · challenger deep">
         signal
       </CodeHeading>
 

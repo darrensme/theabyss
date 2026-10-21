@@ -1045,6 +1045,128 @@ kbd {
   font-size: 0.72rem;
 }
 
+/* ───────────────────────── small projects ───────────────────────── */
+/* sits right under projects, so it doesn't need the full section gap */
+.smallp.section {
+  padding-top: clamp(2rem, 6vh, 4rem);
+}
+
+.smallp__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  perspective: 1400px;
+}
+
+.mini__inner.spotlight-card {
+  height: 100%;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  --spotlight-card-border: var(--line);
+}
+
+.mini__shot {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: #e9e7e3;
+  display: grid;
+  place-items: center;
+}
+.mini__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.9s var(--ease-out), filter 0.6s;
+  filter: saturate(0.85) brightness(0.92);
+}
+.pcard:hover .mini__shot img {
+  transform: scale(1.06);
+  filter: none;
+}
+/* a light screenshot on a dark page: fade its bottom edge into the card */
+.mini__shot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  background: linear-gradient(to top, rgba(9, 8, 20, 0.45), transparent 40%);
+}
+.mini__letter {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 4rem;
+  color: #1b1a18;
+}
+.mini__no {
+  position: absolute;
+  z-index: 1;
+  left: 0.7rem;
+  bottom: 0.55rem;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.mini__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0.9rem 0.8rem;
+}
+
+.mini__name {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 2.6vw, 2.3rem);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.mini__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 36ch;
+}
+
+.mini .pcard__foot {
+  padding-top: 0.9rem;
+  margin-top: auto;
+}
+
+/* empty slot: where the next toy will go */
+.mini--ghost {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  border: 1px dashed var(--line-2);
+  border-radius: 1.5rem;
+  background: rgba(7, 6, 15, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+.mini--ghost span {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--muted);
+  animation: breathe-dot 3s ease-in-out infinite;
+}
+.mini--ghost p {
+  margin: 0;
+}
+
 /* ───────────────────────── crew ───────────────────────── */
 .crew__grid {
   display: grid;
