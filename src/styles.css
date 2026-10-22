@@ -892,9 +892,11 @@ kbd {
 
 .pcard__name {
   margin: 0;
-  font-size: clamp(1.8rem, 3vw, 2.3rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 3.4vw, 2.8rem);
+  letter-spacing: -0.01em;
   line-height: 1;
 }
 
@@ -1068,7 +1070,7 @@ kbd {
 
 .mini__shot {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1200 / 630;
   overflow: hidden;
   border-radius: 1rem;
   background: #e9e7e3;
@@ -1105,9 +1107,12 @@ kbd {
 .mini__no {
   position: absolute;
   z-index: 1;
-  left: 0.7rem;
-  bottom: 0.55rem;
-  font-size: 0.68rem;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(7, 6, 15, 0.62);
+  font-size: 0.66rem;
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -1141,30 +1146,50 @@ kbd {
   margin-top: auto;
 }
 
-/* empty slot: where the next toy will go */
-.mini--ghost {
-  min-height: 220px;
-  display: grid;
-  place-content: center;
+/* the next toy, still compiling: a dead screen where the banner would be */
+.mini__shot--locked {
+  background:
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px),
+    radial-gradient(70% 90% at 50% 50%, rgba(90, 209, 255, 0.08), transparent 70%),
+    #07060f;
+  align-content: center;
   justify-items: center;
-  gap: 0.6rem;
-  border: 1px dashed var(--line-2);
-  border-radius: 1.5rem;
-  background: rgba(7, 6, 15, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-align: center;
+  gap: 0.4rem;
 }
-.mini--ghost span {
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--muted);
-  animation: breathe-dot 3s ease-in-out infinite;
+.mini__shot--locked::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: static 0.6s steps(4) infinite;
 }
-.mini--ghost p {
+@keyframes static {
+  25% { transform: translate(-6%, 4%); }
+  50% { transform: translate(5%, -7%); }
+  75% { transform: translate(-3%, -4%); }
+}
+.mini__shot--locked .pcard__icon {
   margin: 0;
+  width: 68px;
+  height: 68px;
+}
+.mini__signal {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dim);
+  animation: breathe-dot 2.4s ease-in-out infinite;
+}
+.pcard--locked:hover .mini__shot--locked::before {
+  opacity: 0.16;
+}
+.mini .locked__title.glitch {
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+}
+.mini .locked__msg {
+  padding-top: 0.9rem;
 }
 
 /* ───────────────────────── crew ───────────────────────── */

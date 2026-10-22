@@ -112,17 +112,16 @@ const DENIED = [
   'access denied.'
 ];
 
-function LockedCard({ index }) {
-  const ref = useRef(null);
+// shared by the big and the small "coming soon" cards: a progress bar that
+// never quite finishes, and a shake + message when you poke it
+export function useLockedCard(ref, messages) {
   const tries = useRef(0);
-  useCardMotion(ref, index);
 
   useGSAP(
     () => {
       const bar = ref.current.querySelector('.locked__fill');
       const pct = ref.current.querySelector('.locked__pct');
       const state = { p: 0 };
-      // a progress bar that never quite finishes
       const tl = gsap.timeline({ repeat: -1, paused: true });
       tl.set(state, { p: 0 })
         .to(state, {
@@ -151,12 +150,18 @@ function LockedCard({ index }) {
     { scope: ref }
   );
 
-  const deny = () => {
-    const msg = DENIED[Math.min(tries.current++, DENIED.length - 1)];
+  return () => {
+    const msg = messages[Math.min(tries.current++, messages.length - 1)];
     const out = ref.current.querySelector('.locked__msg');
     gsap.fromTo(ref.current, { x: 0 }, { keyframes: { x: [0, -10, 9, -6, 4, 0] }, duration: 0.45, ease: 'none' });
     gsap.fromTo(out, { text: '' }, { text: `> ${msg}`, duration: msg.length / 40, ease: 'none' });
   };
+}
+
+function LockedCard({ index }) {
+  const ref = useRef(null);
+  useCardMotion(ref, index);
+  const deny = useLockedCard(ref, DENIED);
 
   return (
     <div

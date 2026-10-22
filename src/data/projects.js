@@ -29,7 +29,7 @@ export const projects = [
 //
 //  name         title (shown in italic serif)
 //  url          where the card links (opens in a new tab)
-//  image        a screenshot in /public, ideally 16:9 (e.g. '/projects/thing.jpg')
+//  image        its banner / link-preview image, 1200×630 (e.g. '/thing/og.jpg')
 //  description  one short sentence
 //  tags         a few short words
 // ─────────────────────────────────────────────────────────────
@@ -38,8 +38,15 @@ export const smallProjects = [
   {
     name: 'Jelly / Dice',
     url: 'https://theabyssme.com/jellydice',
-    image: '/projects/jellydice.jpg',
+    image: '/jellydice/og.jpg',
     description: 'Gummy dice with real physics. Throw them, poke them, watch them wobble.',
+    tags: ['webgl', 'toy']
+  },
+  {
+    name: 'Lava / Lamp',
+    url: 'https://theabyssme.com/lavalamp',
+    image: '/lavalamp/og.jpg',
+    description: 'A 3D lava lamp you can heat, swirl and tip. Warm wax rises, splits, merges and sinks again.',
     tags: ['webgl', 'toy']
   }
 ];

@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { smallProjects } from '../data/projects';
 import CodeHeading from './CodeHeading';
 import SpotlightCard from './reactbits/SpotlightCard';
-import { useCardMotion } from './Projects';
+import GlitchText from './reactbits/GlitchText';
+import { useCardMotion, useLockedCard } from './Projects';
 
 const pad = n => String(n).padStart(2, '0');
 
@@ -23,7 +24,7 @@ function SmallCard({ project, index }) {
       >
         <div className="mini__shot">
           {project.image && !broken ? (
-            <img src={project.image} alt="" loading="lazy" width="880" height="495" onError={() => setBroken(true)} />
+            <img src={project.image} alt="" loading="lazy" width="1200" height="630" onError={() => setBroken(true)} />
           ) : (
             <span className="mini__letter">{project.name[0]}</span>
           )}
@@ -49,6 +50,80 @@ function SmallCard({ project, index }) {
   );
 }
 
+const DENIED = [
+  'access denied.',
+  "it's still in the oven.",
+  'small things take time too.',
+  'no peeking.',
+  "fine. a hint: it's small.",
+  'access denied.'
+];
+
+// the next toy, still compiling: a small version of the projects' locked card
+function LockedSmall({ index }) {
+  const ref = useRef(null);
+  useCardMotion(ref, index);
+  const deny = useLockedCard(ref, DENIED);
+
+  return (
+    <div
+      ref={ref}
+      className="pcard pcard--locked mini"
+      role="button"
+      tabIndex={0}
+      aria-label="More small projects coming soon"
+      onClick={deny}
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), deny())}
+      data-cursor="locked"
+      data-no-pulse
+    >
+      <SpotlightCard
+        className="mini__inner locked"
+        style={{ '--spotlight-card-surface': 'rgba(9, 8, 20, 0.82)' }}
+        spotlightColor="#5ad1ff"
+        intensity={0.12}
+      >
+        <div className="mini__shot mini__shot--locked" aria-hidden="true">
+          <div className="pcard__icon locked__icon">
+            <span className="pcard__orbit" />
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+              <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+              <circle cx="12" cy="15.5" r="1.2" fill="currentColor" />
+            </svg>
+          </div>
+          <span className="mini__signal mono">no signal</span>
+          <span className="mini__no mono">s{pad(index + 1)}</span>
+        </div>
+
+        <div className="mini__body">
+          <div className="pcard__top mono">
+            <span className="c-dim">next_toy.exe</span>
+            <span className="pcard__status is-wip">
+              <i /> compiling
+            </span>
+          </div>
+
+          <GlitchText className="locked__title" speed={0.7} enableOnHover>
+            classified
+          </GlitchText>
+
+          <div className="locked__bar mono">
+            <span className="locked__track">
+              <span className="locked__fill" />
+            </span>
+            <span className="locked__pct">0%</span>
+          </div>
+
+          <p className="locked__msg mono" aria-live="polite">
+            <span className="c-dim">// more small things incoming</span>
+          </p>
+        </div>
+      </SpotlightCard>
+    </div>
+  );
+}
+
 export default function SmallProjects() {
   return (
     <section className="smallp section" id="small-projects">
@@ -60,13 +135,7 @@ export default function SmallProjects() {
         {smallProjects.map((project, i) => (
           <SmallCard key={project.name} project={project} index={i} />
         ))}
-        <div className="mini mini--ghost mono" aria-hidden="true">
-          <span>+</span>
-          <p>more small things
-            <br />
-            wash up here
-          </p>
-        </div>
+        <LockedSmall index={smallProjects.length} />
       </div>
     </section>
   );
