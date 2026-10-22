@@ -10,6 +10,7 @@ const pad = n => String(n).padStart(2, '0');
 function SmallCard({ project, index }) {
   const ref = useRef(null);
   const [broken, setBroken] = useState(false);
+  const [iconBroken, setIconBroken] = useState(false);
   useCardMotion(ref, index);
   const host = project.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -30,7 +31,10 @@ function SmallCard({ project, index }) {
           <span className="mini__no mono">s{pad(index + 1)}</span>
         </div>
 
-        <div className="mini__body">
+        <div className={`mini__body${project.icon && !iconBroken ? ' has-icon' : ''}`}>
+          {project.icon && !iconBroken && (
+            <img className="mini__icon" src={project.icon} alt="" width="52" height="52" onError={() => setIconBroken(true)} />
+          )}
           <h3 className="mini__name">{project.name}</h3>
           <p className="mini__desc">{project.description}</p>
           <div className="pcard__foot mono">
