@@ -1105,7 +1105,7 @@ kbd {
 .mini__no {
   position: absolute;
   z-index: 1;
-  right: 0.75rem;
+  left: 0.7rem;
   bottom: 0.55rem;
   font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.85);
@@ -1117,24 +1117,6 @@ kbd {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 0.9rem 0.8rem;
-}
-
-.mini__body {
-  position: relative;
-}
-/* the project's own app icon, perched on the screenshot's bottom edge */
-.mini__icon {
-  width: 52px;
-  height: 52px;
-  margin: calc(-1rem - 30px) 0 0.15rem -0.1rem;
-  position: relative;
-  z-index: 2;
-  border-radius: 14px;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(185, 164, 255, 0.25));
-  transition: transform 0.6s var(--ease-out);
-}
-.pcard:hover .mini__icon {
-  transform: translateY(-4px) rotate(-8deg) scale(1.06);
 }
 
 .mini__name {

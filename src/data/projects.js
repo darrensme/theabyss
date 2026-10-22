@@ -30,7 +30,6 @@ export const projects = [
 //  name         title (shown in italic serif)
 //  url          where the card links (opens in a new tab)
 //  image        a screenshot in /public, ideally 16:9 (e.g. '/projects/thing.jpg')
-//  icon         its favicon / app icon (optional, square)
 //  description  one short sentence
 //  tags         a few short words
 // ─────────────────────────────────────────────────────────────
@@ -40,7 +39,6 @@ export const smallProjects = [
     name: 'Jelly / Dice',
     url: 'https://theabyssme.com/jellydice',
     image: '/projects/jellydice.jpg',
-    icon: '/jellydice/favicon.svg',
     description: 'Gummy dice with real physics. Throw them, poke them, watch them wobble.',
     tags: ['webgl', 'toy']
   }
