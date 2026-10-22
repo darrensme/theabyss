@@ -1,25 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8f949a"/>
-      <stop offset=".45" stop-color="#eef0f2"/>
-      <stop offset="1" stop-color="#9ba0a6"/>
+    <linearGradient id="lava" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8f4f"/>
+      <stop offset="1" stop-color="#e8400f"/>
     </linearGradient>
-    <radialGradient id="glow" cx=".5" cy=".85" r=".8">
-      <stop offset="0" stop-color="#ffb070" stop-opacity=".55"/>
-      <stop offset="1" stop-color="#ffb070" stop-opacity=".08"/>
-    </radialGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
     <clipPath id="glass">
-      <path d="M25 42C21.5 39.5 20.3 36.5 20.6 33L26.2 12.5h11.6L43.4 33c.3 3.5-.9 6.5-4.4 9z"/>
+      <path d="M26.8 15.6H37.2L43.4 32.5C45.2 37.6 41.6 42.2 37.4 43H26.6C22.4 42.2 18.8 37.6 20.6 32.5z"/>
     </clipPath>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#1b1a18"/>
-  <path d="M25 42C21.5 39.5 20.3 36.5 20.6 33L26.2 12.5h11.6L43.4 33c.3 3.5-.9 6.5-4.4 9z" fill="url(#glow)"/>
-  <g clip-path="url(#glass)" fill="#ff5a1f">
-    <ellipse cx="32" cy="42" rx="12" ry="4.5"/>
-    <circle cx="29.5" cy="29" r="5"/>
-    <circle cx="35" cy="18.5" r="3.4"/>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#lava)"/>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="none" stroke="#a82c06" stroke-opacity=".35" stroke-width="2"/>
+  <!-- the lamp: cap, glass, base -->
+  <g fill="#fffaf2">
+    <path d="M28.4 8.8h7.2l1.9 5.4H26.5z"/>
+    <path d="M26.8 15.6H37.2L43.4 32.5C45.2 37.6 41.6 42.2 37.4 43H26.6C22.4 42.2 18.8 37.6 20.6 32.5z"/>
+    <path d="M26.2 44.6h11.6l6.6 11.4H19.6z"/>
   </g>
-  <path d="M26.2 12.5h11.6L35 5.5h-6z" fill="url(#metal)"/>
-  <path d="M25 42h14l5.2 16H19.8z" fill="url(#metal)"/>
+  <!-- wax: a pool on the bottom, one blob rising, one up top -->
+  <g clip-path="url(#glass)" fill="#e8400f">
+    <ellipse cx="32" cy="43.6" rx="13" ry="4.2"/>
+    <circle cx="33.6" cy="35.4" r="4.3"/>
+    <circle cx="30.4" cy="24.2" r="3.2"/>
+  </g>
+  <path d="M14 10h36a8 8 0 0 1 8 8v4c-8-4-17-6-26-6S14 18 6 22v-4a8 8 0 0 1 8-8z" fill="url(#gloss)" opacity=".55"/>
 </svg>
