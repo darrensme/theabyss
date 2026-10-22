@@ -1,0 +1,13 @@
+{
+  "name": "Lava / Lamp",
+  "short_name": "Lava Lamp",
+  "start_url": "/lavalamp/",
+  "scope": "/lavalamp/",
+  "display": "standalone",
+  "background_color": "#e9e7e3",
+  "theme_color": "#e9e7e3",
+  "icons": [
+    { "src": "/lavalamp/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/lavalamp/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

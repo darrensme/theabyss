@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f949a"/>
+      <stop offset=".45" stop-color="#eef0f2"/>
+      <stop offset="1" stop-color="#9ba0a6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".85" r=".8">
+      <stop offset="0" stop-color="#ffb070" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffb070" stop-opacity=".08"/>
+    </radialGradient>
+    <clipPath id="glass">
+      <path d="M25 42C21.5 39.5 20.3 36.5 20.6 33L26.2 12.5h11.6L43.4 33c.3 3.5-.9 6.5-4.4 9z"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#1b1a18"/>
+  <path d="M25 42C21.5 39.5 20.3 36.5 20.6 33L26.2 12.5h11.6L43.4 33c.3 3.5-.9 6.5-4.4 9z" fill="url(#glow)"/>
+  <g clip-path="url(#glass)" fill="#ff5a1f">
+    <ellipse cx="32" cy="42" rx="12" ry="4.5"/>
+    <circle cx="29.5" cy="29" r="5"/>
+    <circle cx="35" cy="18.5" r="3.4"/>
+  </g>
+  <path d="M26.2 12.5h11.6L35 5.5h-6z" fill="url(#metal)"/>
+  <path d="M25 42h14l5.2 16H19.8z" fill="url(#metal)"/>
+</svg>

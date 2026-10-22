@@ -1,0 +1,1505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lava / Lamp</title>
+<meta name="description" content="A 3D lava lamp you can heat, swirl and tip. Warm wax rises, splits, merges and sinks again, like the 1960s original.">
+<meta name="theme-color" content="#e9e7e3">
+<link rel="canonical" href="https://theabyssme.com/lavalamp/">
+
+<!-- icons -->
+<link rel="icon" type="image/svg+xml" href="/lavalamp/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/lavalamp/favicon-32.png">
+<link rel="apple-touch-icon" href="/lavalamp/apple-touch-icon.png">
+<link rel="manifest" href="/lavalamp/site.webmanifest">
+
+<!-- link previews (iMessage, Discord, X, WhatsApp, Slack…) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Abyss">
+<meta property="og:title" content="Lava / Lamp">
+<meta property="og:description" content="A 3D lava lamp you can heat, swirl and tip. Warm wax rises, splits, merges and sinks again, like the 1960s original.">
+<meta property="og:url" content="https://theabyssme.com/lavalamp/">
+<meta property="og:image" content="https://theabyssme.com/lavalamp/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A glowing lava lamp with orange wax blobs beside the title Lava / Lamp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lava / Lamp">
+<meta name="twitter:description" content="A 3D lava lamp you can heat, swirl and tip. Warm wax rises, splits, merges and sinks again, like the 1960s original.">
+<meta name="twitter:image" content="https://theabyssme.com/lavalamp/og.jpg">
+<meta name="twitter:image:alt" content="A glowing lava lamp with orange wax blobs beside the title Lava / Lamp">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a full-bleed WebGL specimen on an invisible floor; title top-left, specimen card top-right,
+   readings bottom-left, the switch bottom-right. Light only, by request. */
+:root {
+  --bg: #e9e7e3;
+  --ink: #1b1a18;
+  --muted: #77736c;
+  --faint: #a7a39b;
+  --line: #d2cec6;
+  --card: rgba(240, 238, 234, .78);
+  --chip: #f4f2ee;
+  --flavor: #ff5a1f;
+  --on-flavor: #1b1a18;
+
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "DM Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+html, body { height: 100%; overflow: hidden; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+
+.ui {
+  position: fixed; inset: 0; pointer-events: none; z-index: 2;
+  padding-block: calc(28px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+}
+.ui > * { pointer-events: auto; }
+
+.eyebrow, .label { font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+
+/* Title block */
+.head { position: absolute; top: calc(28px + env(safe-area-inset-top, 0px)); left: max(28px, env(safe-area-inset-left, 0px)); max-width: min(560px, calc(100% - 300px)); pointer-events: none; }
+.head h1 { font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(56px, 7.4vw, 118px); line-height: .9; letter-spacing: -.015em; margin: 14px 0 0; }
+.head h1 > span { display: block; }
+.head h1 .l2 { padding-left: .34em; }
+.head h1 .slash { color: var(--flavor); transition: color .4s; }
+.head p.lede { margin: 18px 0 0; max-width: 34ch; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.result { margin: 18px 0 0; font-family: var(--display); font-size: 30px; line-height: 1.1; min-height: 1.1em; transform-origin: 0 100%; white-space: nowrap; }
+.result em { color: var(--muted); }
+.result.pop { animation: pop .6s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes pop { 0% { transform: scale(1, 1); } 30% { transform: scale(1.08, .92); } 60% { transform: scale(.97, 1.04); } 100% { transform: scale(1, 1); } }
+
+/* Live pill */
+.live { position: absolute; top: calc(28px + env(safe-area-inset-top, 0px)); right: max(28px, env(safe-area-inset-right, 0px)); display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--card); font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--flavor); transition: background .4s; }
+
+/* Specimen card */
+.panel {
+  position: absolute; top: calc(70px + env(safe-area-inset-top, 0px)); right: max(28px, env(safe-area-inset-right, 0px));
+  width: 224px; box-sizing: border-box; padding: 14px 14px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 3px;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  max-height: calc(100% - 180px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain;
+}
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; width: 100%; padding: 0 0 10px; border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; cursor: default; font: inherit; text-align: left; }
+.panel-head .fig { font-family: var(--display); font-style: italic; font-size: 13px; color: var(--muted); }
+.panel-body { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; }
+.group { display: flex; flex-direction: column; gap: 7px; }
+.col { display: contents; }
+
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 5px; }
+.swatch label { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 2px 4px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; }
+.swatch label:hover { border-color: var(--line); }
+.swatch input:checked + label { border-color: var(--faint); background: var(--chip); }
+.swatch input:focus-visible + label { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+.chip { width: 100%; height: 13px; border-radius: 2px; background: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,0) 55%), var(--c); box-shadow: inset 0 -2px 3px color-mix(in srgb, var(--c) 70%, #000); }
+.chip.mixed { background: linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,0) 55%), linear-gradient(90deg, #ff5a1f, #d9183b, #ff5aa8, #8a3cf0, #1f6fff, #8ccf1d, #ffb21a); box-shadow: inset 0 -2px 3px rgba(0,0,0,.2); }
+.chip.pale { box-shadow: inset 0 0 0 1px var(--line), inset 0 -2px 3px rgba(0,0,0,.08); }
+.swatch .nm { font-family: var(--display); font-style: italic; font-size: 11.5px; line-height: 1; color: var(--muted); text-align: center; }
+.swatches.two .nm { min-height: 2em; display: flex; align-items: center; }
+.swatch input:checked + label .nm { color: var(--ink); }
+
+.btn { display: grid; place-items: center; height: 26px; border: 1px solid var(--line); border-radius: 2px; background: var(--chip); font-family: var(--sans); font-size: 11px; color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--faint); }
+.btn:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+.slider-row { display: flex; justify-content: space-between; align-items: baseline; }
+.val { font-family: var(--mono); font-size: 9.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.ends { display: flex; justify-content: space-between; font-family: var(--display); font-style: italic; font-size: 10.5px; color: var(--faint); margin-top: -2px; }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; margin: 0; cursor: pointer; }
+input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--faint); }
+input[type="range"]::-moz-range-track { height: 1px; background: var(--faint); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 11px; height: 11px; margin-top: -5px; border-radius: 50%; background: var(--bg); border: 1px solid var(--ink); }
+input[type="range"]::-moz-range-thumb { width: 9px; height: 9px; border-radius: 50%; background: var(--bg); border: 1px solid var(--ink); }
+input[type="range"]:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.btn { height: 28px; padding: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.check { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; }
+.check input { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; margin: 0; border: 1px solid var(--ink); border-radius: 1px; background: var(--bg); display: grid; place-items: center; cursor: pointer; }
+.check input:checked::after { content: ""; width: 6px; height: 6px; background: var(--ink); }
+.check input:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.log li { display: flex; justify-content: space-between; gap: 8px; white-space: nowrap; }
+.log li b { font-weight: 500; color: var(--ink); }
+.log .empty { font-family: var(--display); font-style: italic; font-size: 12px; }
+
+/* Readings, bottom-left */
+.foot { position: absolute; left: max(28px, env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: min(270px, calc(100% - 56px)); display: flex; flex-direction: column; gap: 12px; }
+.note { margin: 0; font-family: var(--display); font-style: italic; font-size: 13px; line-height: 1.4; color: var(--ink); }
+.note .label { font-style: normal; margin-right: 4px; }
+.stats { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stat { padding: 7px 14px 7px 0; display: flex; flex-direction: column; gap: 2px; }
+.stat + .stat { padding-left: 12px; border-left: 1px solid var(--line); }
+.stat .label { font-size: 8.5px; }
+.stat b { font-family: var(--mono); font-weight: 500; font-size: 13px; font-variant-numeric: tabular-nums; }
+.stat small { font-family: var(--display); font-style: italic; font-size: 10px; color: var(--muted); margin-left: 2px; }
+.fine { margin: 0; font-size: 9px; line-height: 1.5; color: var(--faint); }
+
+/* Switch, bottom-right */
+.rollbtn {
+  position: absolute; right: max(28px, env(safe-area-inset-right, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  display: inline-flex; align-items: center; gap: 22px; padding: 12px 16px;
+  border: 1px solid var(--ink); border-radius: 3px; background: var(--ink); color: var(--bg);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer;
+}
+.rollbtn .ar { font-family: var(--display); font-style: italic; font-size: 18px; letter-spacing: 0; text-transform: none; line-height: 1; }
+.rollbtn kbd { font-family: var(--mono); font-size: 9px; padding: 2px 5px; border: 1px solid currentColor; border-radius: 2px; opacity: .55; }
+.rollbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* Full-screen switch-on curtain */
+.cover {
+  position: fixed; inset: 0; z-index: 20; pointer-events: none;
+  background: var(--flavor); color: var(--on-flavor);
+  clip-path: circle(0px at var(--cx, 90%) var(--cy, 95%));
+  transition: clip-path .46s cubic-bezier(.75, 0, .25, 1);
+  display: grid; place-items: center;
+}
+.cover.in { clip-path: circle(150vmax at var(--cx, 90%) var(--cy, 95%)); pointer-events: auto; }
+.cover.out { clip-path: circle(0px at 50% 50%); transition-duration: .55s; }
+.cover-in { display: flex; flex-direction: column; align-items: center; gap: 10px; transform: scale(.9); opacity: 0; transition: transform .5s cubic-bezier(.3, 1.6, .5, 1), opacity .25s; }
+.cover.in .cover-in { transform: scale(1); opacity: 1; transition-delay: .12s; }
+.cover-word { font-family: var(--display); font-style: italic; font-size: clamp(96px, 20vw, 260px); line-height: .85; }
+.cover-meta { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; opacity: .7; }
+
+/* Welcome screen */
+.welcome {
+  position: fixed; inset: 0; z-index: 30; display: flex; overflow-y: auto; overscroll-behavior: contain;
+  padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(233, 231, 227, .8); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  transition: opacity .7s ease, visibility .7s;
+}
+.welcome.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+.w-inner { margin: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; max-width: 640px; transition: transform .7s cubic-bezier(.6, 0, .3, 1); }
+.welcome.gone .w-inner { transform: translateY(-24px) scale(.98); }
+.w-title { font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(54px, min(15vw, 19vh), 168px); line-height: .86; letter-spacing: -.02em; margin: 0; }
+.w-title > span { display: block; }
+.w-title .l2 { padding-left: .34em; }
+.w-title .slash { color: var(--flavor); }
+.w-lede { margin: 0; max-width: 36ch; font-size: 14px; color: var(--muted); }
+.w-btn {
+  display: inline-flex; align-items: center; gap: 28px; margin-top: 6px; padding: 15px 20px;
+  border: 1px solid var(--ink); border-radius: 3px; background: var(--ink); color: var(--bg);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; cursor: pointer;
+  transition: transform .2s cubic-bezier(.3, 1.6, .5, 1);
+}
+.w-btn:hover { transform: translateY(-2px); }
+.w-btn:active { transform: scale(.97, .94); }
+.w-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.w-btn .ar { font-family: var(--display); font-style: italic; font-size: 22px; letter-spacing: 0; text-transform: none; line-height: 1; }
+.w-fine { margin: 0; font-family: var(--display); font-style: italic; font-size: 13px; color: var(--faint); }
+@media (max-height: 520px) {
+  .w-inner { gap: 10px; }
+  .w-lede { font-size: 13px; }
+  .w-btn { padding: 11px 16px; margin-top: 2px; }
+  .w-fine { display: none; }
+}
+
+.nogl { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-family: var(--display); font-size: 22px; color: var(--muted); }
+
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
+
+/* Compact: phones, and any screen too short for the full layout. The specimen card folds into a button. */
+@media (max-width: 760px), (max-height: 520px) {
+  .ui { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .head { left: max(16px, env(safe-area-inset-left, 0px)); top: calc(16px + env(safe-area-inset-top, 0px)); max-width: calc(100% - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+  /* only the title has to clear the folded specimen button; the status line can run full width */
+  .head .eyebrow, .head h1 { max-width: calc(100vw - 172px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+  .head h1 { font-size: clamp(42px, 13vw, 56px); margin-top: 8px; }
+  .head p.lede, .live, .note, .fine { display: none; }
+  .result { font-size: 21px; margin-top: 10px; }
+  .panel {
+    top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    width: min(236px, calc(100vw - 32px)); padding: 9px 12px; z-index: 3;
+    max-height: calc(100% - 108px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .panel-head { cursor: pointer; padding-bottom: 0; border-bottom: 0; gap: 10px; align-items: center; }
+  .panel-head::after { content: "+"; font-family: var(--mono); font-size: 13px; line-height: 1; color: var(--ink); }
+  .panel.open .panel-head::after { content: "\2212"; }
+  .panel.open .panel-head { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .panel:not(.open) .panel-body, .panel:not(.open) .fig { display: none; }
+  .panel:not(.open) { width: auto; }
+}
+/* Phones held upright: stats above a full-width switch bar. */
+@media (max-width: 760px) and (min-height: 521px) {
+  .foot { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: auto; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  .rollbtn { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); justify-content: space-between; }
+  .rollbtn kbd { display: none; }
+}
+/* Short landscape (phones on their side): everything shrinks to the corners. */
+@media (max-height: 520px) {
+  .head { max-width: 38%; top: calc(12px + env(safe-area-inset-top, 0px)); }
+  .head h1 { font-size: clamp(34px, 11vh, 48px); margin-top: 4px; }
+  .result { font-size: 17px; margin-top: 6px; }
+  .panel { top: calc(12px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+  .foot { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: auto; }
+  .stat { padding-block: 4px; }
+  .rollbtn { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 10px 14px; gap: 14px; }
+  .rollbtn kbd { display: none; }
+}
+/* Wide but short screens (laptops): the card opens into two columns so nothing has to scroll. */
+@media (min-width: 1000px) and (max-height: 940px) and (min-height: 521px) {
+  .panel { width: 412px; }
+  .panel-body { flex-direction: row; gap: 18px; }
+  .col { display: flex; flex-direction: column; gap: 14px; flex: 1; min-width: 0; }
+}
+/* Fingers need bigger targets than a mouse. */
+@media (pointer: coarse) {
+  .btn { height: 36px; font-size: 12px; }
+  .checks { gap: 8px 16px; }
+  .check { font-size: 13px; gap: 7px; padding-block: 4px; }
+  .check input { width: 16px; height: 16px; }
+  .check input:checked::after { width: 10px; height: 10px; }
+  .swatch label { padding: 7px 2px 6px; }
+  .chip { height: 16px; }
+  input[type="range"] { height: 30px; }
+  input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -10px; }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; }
+  .panel-head { min-height: 30px; }
+}
+@media (min-width: 1700px) and (min-height: 900px) {
+  .panel { width: 252px; }
+  .head p.lede { font-size: 14px; }
+  .note { font-size: 14px; }
+  .foot { width: 300px; }
+}
+@media (prefers-reduced-motion: reduce) { .result.pop { animation: none; } }
+</style>
+</head>
+<body>
+
+<canvas id="scene" tabindex="0" aria-label="A lava lamp. Drag it to tilt it, or tap the glass to nudge the wax."></canvas>
+
+<div class="ui">
+  <header class="head">
+    <p class="eyebrow">Material studies / No. 007</p>
+    <h1><span>Lava</span><span class="l2"><span class="slash">/</span> Lamp.</span></h1>
+    <p class="lede">Paraffin wax suspended in a liquid of almost the same weight. A bulb in the base warms the wax until it swells, lightens and rises; up top it cools and sinks again.</p>
+    <p class="result" id="result" aria-live="polite"></p>
+  </header>
+
+  <div class="live"><i></i>WebGL · Live</div>
+
+  <aside class="panel" id="panel" aria-label="Settings">
+    <button class="panel-head" id="panelHead" type="button" aria-expanded="true">
+      <span class="label">The specimen</span><span class="fig">fig. 07</span>
+    </button>
+    <div class="panel-body">
+      <div class="col">
+      <div class="group">
+        <span class="label">Wax</span>
+        <div class="swatches two" id="waxes"></div>
+      </div>
+      <div class="group">
+        <span class="label">Liquid</span>
+        <div class="swatches" id="liquids"></div>
+      </div>
+      <div class="group">
+        <div class="slider-row"><label class="label" for="heat">Heat</label><span class="val" id="heatVal">60 °C</span></div>
+        <input type="range" id="heat" min="40" max="80" step="1" value="60">
+        <div class="ends"><span>cool</span><span>hot</span></div>
+      </div>
+      <div class="group">
+        <div class="slider-row"><label class="label" for="flow">Flow</label><span class="val" id="flowVal">0.50</span></div>
+        <input type="range" id="flow" min="0" max="1" step="0.01" value="0.5">
+        <div class="ends"><span>thick</span><span>runny</span></div>
+      </div>
+      <div class="group">
+        <div class="slider-row"><label class="label" for="blobs">Blobs</label><span class="val" id="blobsVal">6</span></div>
+        <input type="range" id="blobs" min="3" max="12" step="1" value="6">
+        <div class="ends"><span>few</span><span>many</span></div>
+      </div>
+      </div>
+      <div class="col">
+      <div class="btns">
+        <button class="btn" type="button" id="bPower">Switch on</button>
+        <button class="btn" type="button" id="bSwirl">Swirl</button>
+        <button class="btn" type="button" id="bTip">Tip</button>
+        <button class="btn" type="button" id="bReset">Reset</button>
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="music" checked>Music</label>
+        <label class="check"><input type="checkbox" id="sound" checked>Sound</label>
+        <label class="check"><input type="checkbox" id="glow" checked>Glow</label>
+      </div>
+      <div class="group">
+        <span class="label">Log</span>
+        <ol class="log" id="log"></ol>
+      </div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="foot">
+    <p class="note"><span class="label">Hand</span>Drag the lamp to tilt it. Tap the glass to nudge the wax. Space switches it on with the curtain.</p>
+    <div class="stats">
+      <div class="stat"><span class="label">Temp</span><b><span id="sTemp">22</span><small>°C</small></b></div>
+      <div class="stat"><span class="label">Blobs</span><b id="sBlobs">0</b></div>
+      <div class="stat"><span class="label">Merges</span><b id="sMerges">0</b></div>
+      <div class="stat"><span class="label">Uptime</span><b id="sUp">0:00</b></div>
+    </div>
+    <p class="fine">Edward Craven Walker invented the lava lamp in 1963. An incandescent bulb warms wax that is a touch denser than the liquid around it; warmed, it expands and rises, then cools near the top and sinks. A real one takes roughly an hour or more to get flowing; this one is sped up to about 20 seconds.</p>
+  </section>
+
+  <button class="rollbtn" id="rollBtn" type="button"><span id="rollLabel">Switch on</span><kbd>Space</kbd><span class="ar">→</span></button>
+</div>
+
+<div class="cover" id="cover" aria-hidden="true">
+  <div class="cover-in"><span class="cover-word">Glow.</span><span class="cover-meta" id="coverMeta"></span></div>
+</div>
+
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="wTitle">
+  <div class="w-inner">
+    <p class="eyebrow">Material studies / No. 007</p>
+    <h2 class="w-title" id="wTitle"><span>Lava</span><span class="l2"><span class="slash">/</span> Lamp.</span></h2>
+    <p class="w-lede">Warm wax in a glass rocket, lit from below. Turn your sound up; there's a slow lounge record playing inside.</p>
+    <button class="w-btn" id="enterBtn" type="button">Welcome in <span class="ar">→</span></button>
+    <p class="w-fine">Music starts when you enter. Switch it off any time in the specimen card.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+(() => {
+  const WAXES = [
+    { id: "orange", name: "Molten Orange", c: "#ff5a1f" },
+    { id: "cherry", name: "Cherry", c: "#d9183b" },
+    { id: "lime", name: "Lime", c: "#8ccf1d" },
+    { id: "violet", name: "Violet", c: "#8a3cf0" },
+    { id: "blue", name: "Electric Blue", c: "#1f6fff" },
+    { id: "gold", name: "Gold", c: "#ffb21a" },
+    { id: "pink", name: "Pink", c: "#ff5aa8" },
+    { id: "mixed", name: "Mixed", c: null }
+  ];
+  const REAL = WAXES.filter(w => w.c);
+  // tint = what the liquid lets through, dens = how strongly it tints per unit of depth
+  const LIQUIDS = [
+    { id: "clear", name: "Clear", c: "#efece5", tint: [.99, .98, .955], dens: .5 },
+    { id: "amber", name: "Amber", c: "#e3a03c", tint: [1, .74, .36], dens: 2.3 },
+    { id: "sea", name: "Sea Blue", c: "#3a98c2", tint: [.45, .78, .97], dens: 2.3 },
+    { id: "smoke", name: "Smoke", c: "#837d75", tint: [.66, .64, .62], dens: 2.6 }
+  ];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const ease = (dt, tau) => 1 - Math.exp(-dt / tau);
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("lavalamp:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("lavalamp:" + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const num = (v, d) => (typeof v === "number" && isFinite(v) ? v : d);
+  const settings = {
+    wax: store.get("wax", "orange"), liquid: store.get("liquid", "clear"),
+    heat: Math.round(clamp(num(store.get("heat", 60), 60), 40, 80)),
+    flow: clamp(num(store.get("flow", .5), .5), 0, 1),
+    blobs: Math.round(clamp(num(store.get("blobs", 6), 6), 3, 12)),
+    sound: store.get("sound", true) !== false, music: store.get("music", true) !== false, glow: store.get("glow", true) !== false
+  };
+  if (!WAXES.some(w => w.id === settings.wax)) settings.wax = "orange";
+  if (!LIQUIDS.some(l => l.id === settings.liquid)) settings.liquid = "clear";
+
+  // ---------- Controls ----------
+  $("waxes").innerHTML = WAXES.map(w => `
+    <div class="swatch">
+      <input type="radio" class="vh" name="wax" id="wx-${w.id}" value="${w.id}"${w.id === settings.wax ? " checked" : ""}>
+      <label for="wx-${w.id}" title="${w.name}"><span class="chip${w.c ? "" : " mixed"}" style="--c:${w.c || "#999"}"></span><span class="nm">${w.name}</span></label>
+    </div>`).join("");
+  $("liquids").innerHTML = LIQUIDS.map(l => `
+    <div class="swatch">
+      <input type="radio" class="vh" name="liquid" id="lq-${l.id}" value="${l.id}"${l.id === settings.liquid ? " checked" : ""}>
+      <label for="lq-${l.id}" title="${l.name}"><span class="chip${l.id === "clear" ? " pale" : ""}" style="--c:${l.c}"></span><span class="nm">${l.name}</span></label>
+    </div>`).join("");
+  $("heat").value = settings.heat; $("heatVal").textContent = settings.heat + " °C";
+  $("flow").value = settings.flow; $("flowVal").textContent = settings.flow.toFixed(2);
+  $("blobs").value = settings.blobs; $("blobsVal").textContent = settings.blobs;
+  $("music").checked = settings.music; $("sound").checked = settings.sound; $("glow").checked = settings.glow;
+
+  const panel = $("panel"), panelHead = $("panelHead");
+  const compact = () => innerWidth <= 760 || innerHeight <= 520;
+  if (!compact()) panel.classList.add("open");
+  panelHead.setAttribute("aria-expanded", panel.classList.contains("open"));
+  panelHead.addEventListener("click", () => {
+    if (!compact()) return;
+    panel.classList.toggle("open");
+    panelHead.setAttribute("aria-expanded", panel.classList.contains("open"));
+  });
+
+  // ---------- Audio ----------
+  // Everything is in D dorian, so effects always sit inside the music.
+  let actx = null;
+  function ensureAudio() {
+    if (!settings.sound && !settings.music) return;
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+    if (actx && actx.state === "suspended") actx.resume().catch(() => {});
+  }
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  let noiseBuf = null;
+  function noise() {
+    if (!noiseBuf) {
+      noiseBuf = actx.createBuffer(1, Math.floor(actx.sampleRate * .5), actx.sampleRate);
+      const ch = noiseBuf.getChannelData(0);
+      for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    }
+    const s = actx.createBufferSource(); s.buffer = noiseBuf; return s;
+  }
+  function env(g, t, vol, attack, dur) {
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  }
+  const KEY = [50, 53, 55, 57, 60, 62];
+  let lastBloop = 0;
+  function bloop(up) {
+    if (!settings.sound || !actx) return;
+    const now = actx.currentTime;
+    if (now - lastBloop < .22) return;
+    lastBloop = now;
+    const t = now + .01, f = mtof(KEY[Math.floor(Math.random() * KEY.length)] - (up ? 0 : 12));
+    const o = actx.createOscillator(), g = actx.createGain(), lp = actx.createBiquadFilter();
+    o.type = "sine"; lp.type = "lowpass"; lp.frequency.value = 900;
+    o.frequency.setValueAtTime(up ? f * .72 : f * 1.45, t);
+    o.frequency.exponentialRampToValueAtTime(up ? f : f * .9, t + .16);
+    env(g, t, up ? .09 : .14, .015, .38);
+    o.connect(lp).connect(g).connect(actx.destination); o.start(t); o.stop(t + .4);
+  }
+  function click() {
+    if (!settings.sound || !actx) return;
+    const t = actx.currentTime + .01;
+    const n = noise(), hp = actx.createBiquadFilter(), g = actx.createGain();
+    hp.type = "highpass"; hp.frequency.value = 2500;
+    env(g, t, .12, .002, .03);
+    n.connect(hp).connect(g).connect(actx.destination); n.start(t); n.stop(t + .05);
+    [[86, .05, .05], [50, .1, .09]].forEach(([m, v, d]) => {
+      const o = actx.createOscillator(), og = actx.createGain();
+      o.frequency.value = mtof(m); env(og, t, v, .002, d);
+      o.connect(og).connect(actx.destination); o.start(t); o.stop(t + d + .02);
+    });
+  }
+  function hum() {
+    if (!settings.sound || !actx) return;
+    const t = actx.currentTime + .05;
+    const g = actx.createGain(), lp = actx.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.setValueAtTime(160, t); lp.frequency.exponentialRampToValueAtTime(900, t + 1.8);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(.075, t + 1.5);
+    g.gain.exponentialRampToValueAtTime(.0001, t + 3.8);
+    lp.connect(g).connect(actx.destination);
+    // A1 → D2, A2 → D3: the hum rises a fourth onto the tonic
+    [[33, 38, 1, "sine"], [45, 50, .5, "sine"], [57, 62, .12, "triangle"]].forEach(([a, b, v, type]) => {
+      const o = actx.createOscillator(), og = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(mtof(a), t); o.frequency.exponentialRampToValueAtTime(mtof(b), t + 1.6);
+      og.gain.value = v; o.connect(og).connect(lp); o.start(t); o.stop(t + 4);
+    });
+  }
+
+  // A slow lounge loop at 80 BPM: Dm9 → G13 → Cmaj9 → Am9, electric piano, round bass, brushes.
+  const STEP = 60 / 80 / 4;
+  const CHORDS = [[53, 57, 60, 64], [53, 59, 64, 69], [52, 55, 59, 62], [55, 59, 60, 64]];
+  const BASSLINE = [
+    [[0, 38, .9], [8, 45, .6], [14, 44, .22]],
+    [[0, 43, .9], [8, 50, .6], [14, 49, .22]],
+    [[0, 48, .9], [8, 43, .6], [14, 46, .22]],
+    [[0, 45, .9], [8, 40, .6], [14, 39, .22]]
+  ];
+  const _ = null;
+  const MELODY = [
+    _, _, _, _, 81, _, _, 79, _, _, 76, _, _, _, 74, _,
+    _, _, 76, _, _, _, 77, _, 76, _, _, _, 74, _, _, _,
+    _, _, _, _, 79, _, _, 76, _, _, 71, _, 74, _, _, _,
+    72, _, _, _, _, _, 76, _, _, 79, _, _, 74, _, 72, _
+  ];
+  let musicBus = null, musicTimer = null, nextTime = 0, stepIdx = 0;
+  function setupMusic() {
+    if (musicBus || !actx) return;
+    musicBus = actx.createGain(); musicBus.gain.value = 0;
+    const lp = actx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; lp.Q.value = .4;
+    const delay = actx.createDelay(1), fb = actx.createGain(), wet = actx.createGain();
+    delay.delayTime.value = STEP * 3; fb.gain.value = .24; wet.gain.value = .14;
+    musicBus.connect(lp).connect(actx.destination);
+    lp.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(actx.destination);
+  }
+  // electric piano: a sine with a faint triangle on top and a slow, soft attack
+  function ep(t, m, dur, vol) {
+    const f = mtof(m), g = actx.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + .045);
+    g.gain.exponentialRampToValueAtTime(vol * .4, t + .6);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    g.connect(musicBus);
+    [["sine", 1, 1], ["triangle", 1, .13], ["sine", 2.003, .06]].forEach(([type, mul, v]) => {
+      const o = actx.createOscillator(), og = actx.createGain();
+      o.type = type; o.frequency.value = f * mul; og.gain.value = v;
+      o.connect(og).connect(g); o.start(t); o.stop(t + dur + .05);
+    });
+  }
+  function bass(t, m, dur) {
+    const g = actx.createGain(), o = actx.createOscillator(), o2 = actx.createOscillator(), g2 = actx.createGain();
+    o.type = "sine"; o.frequency.value = mtof(m);
+    o2.type = "triangle"; o2.frequency.value = mtof(m); g2.gain.value = .18;
+    env(g, t, .2, .02, dur);
+    o.connect(g); o2.connect(g2).connect(g); g.connect(musicBus);
+    o.start(t); o2.start(t); o.stop(t + dur + .05); o2.stop(t + dur + .05);
+  }
+  function brush(t, vol, dur, freq) {
+    const n = noise(), bp = actx.createBiquadFilter(), g = actx.createGain();
+    bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = .7;
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + dur * .3);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    n.connect(bp).connect(g).connect(musicBus);
+    n.start(t, Math.random() * .3); n.stop(t + dur + .02);
+  }
+  function playStep(i, t) {
+    const bar = (i >> 4) & 3, s = i & 15, cycle = Math.floor(i / 64);
+    const swing = s % 4 === 2 ? STEP * .3 : 0, ts = t + swing;
+    if (s === 0) CHORDS[bar].forEach((m, k) => ep(t + k * .012, m, 2.9, .045));
+    if (s === 10) CHORDS[bar].forEach(m => ep(ts, m, 1.2, .026));
+    BASSLINE[bar].forEach(([at, m, d]) => { if (at === s) bass(t, m, d * STEP * 16 * .5); });
+    const m = MELODY[i % 64];
+    if (m && (cycle % 2 === 1 || s % 8 === 4)) ep(ts, m + (cycle % 4 === 3 ? -12 : 0), .9, .04);
+    if (s % 2 === 0) brush(ts, s % 4 === 0 ? .022 : .014, .06, 7500);
+    if (s === 4 || s === 12) brush(t, .035, .22, 3800);
+    if (s === 0 || s === 8) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.setValueAtTime(92, t); o.frequency.exponentialRampToValueAtTime(46, t + .14);
+      env(g, t, s === 0 ? .1 : .06, .006, .2);
+      o.connect(g).connect(musicBus); o.start(t); o.stop(t + .22);
+    }
+  }
+  function startMusic() {
+    if (!settings.music || musicTimer || document.hidden) return;
+    ensureAudio();
+    if (!actx) return;
+    setupMusic();
+    musicBus.gain.cancelScheduledValues(actx.currentTime);
+    musicBus.gain.setTargetAtTime(.8, actx.currentTime, .6);
+    nextTime = actx.currentTime + .1;
+    musicTimer = setInterval(() => {
+      if (nextTime < actx.currentTime - .1) nextTime = actx.currentTime + .05;
+      while (nextTime < actx.currentTime + .2) { playStep(stepIdx, nextTime); stepIdx++; nextTime += STEP; }
+    }, 25);
+  }
+  function stopMusic() {
+    if (!musicTimer) return;
+    clearInterval(musicTimer); musicTimer = null;
+    musicBus.gain.cancelScheduledValues(actx.currentTime);
+    musicBus.gain.setTargetAtTime(0, actx.currentTime, .15);
+  }
+  document.addEventListener("pointerdown", startMusic);
+  document.addEventListener("keydown", startMusic);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stopMusic(); else if (actx) startMusic(); });
+
+  // ---------- Welcome ----------
+  const welcome = $("welcome");
+  let welcomed = false;
+  function enter() {
+    if (welcomed) return;
+    welcomed = true;
+    ensureAudio();
+    startMusic();
+    welcome.classList.add("gone");
+  }
+  $("enterBtn").addEventListener("click", enter);
+  document.addEventListener("keydown", e => {
+    if (welcomed || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); enter(); }
+  });
+  try { $("enterBtn").focus({ preventScroll: true }); } catch (e) {}
+
+  // ---------- Renderer ----------
+  if (!window.THREE) { document.body.insertAdjacentHTML("beforeend", '<div class="nogl">The 3D engine did not load. Check your connection and reload.</div>'); return; }
+  const canvas = $("scene");
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  } catch (e) {
+    document.body.insertAdjacentHTML("beforeend", '<div class="nogl">This browser could not start WebGL, so the lamp cannot be drawn.</div>');
+    return;
+  }
+  let pixelRatio = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.VSMShadowMap;
+
+  const scene = new THREE.Scene();
+  const BG = new THREE.Color(0xe9e7e3);
+  scene.background = BG;
+  const camera = new THREE.PerspectiveCamera(26, 1, .1, 200);
+  const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+
+  // A small softbox studio, baked into an environment map for the glass and the aluminium.
+  (() => {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const room = new THREE.Scene();
+    const shell = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x4a4744, side: THREE.BackSide }));
+    shell.scale.set(24, 14, 24); shell.position.y = 6; room.add(shell);
+    const floorM = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), new THREE.MeshBasicMaterial({ color: 0x9a958e }));
+    floorM.rotation.x = -Math.PI / 2; floorM.position.y = -.9; room.add(floorM);
+    const box = (w, h, x, y, z, k) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, 2, 0); room.add(m);
+    };
+    box(9, 5, 0, 11, 1, 6);
+    box(2.2, 9, -10, 5, 3, 4.2);
+    box(2, 8, 10, 4, -4, 2.2);
+    box(10, 2, 0, 3, 10, 1.4);
+    box(1.4, 7, 6, 4, 9, 2.6);
+    scene.environment = pmrem.fromScene(room, .04).texture;
+    pmrem.dispose();
+  })();
+
+  const sun = new THREE.DirectionalLight(0xffffff, 1.3);
+  sun.position.set(-3.5, 10, 4.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 6, bottom: -4, near: 1, far: 30 });
+  sun.shadow.radius = 16; sun.shadow.blurSamples = 20; sun.shadow.bias = -.0005;
+  scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c8, .35));
+
+  // The floor is invisible; it only catches the shadow, plus a warm pool of light from the lamp.
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ color: 0x2b2420, opacity: .2 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  function radialTexture(stops) {
+    const c = document.createElement("canvas"); c.width = c.height = 128;
+    const x = c.getContext("2d"), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    stops.forEach(([at, a]) => g.addColorStop(at, `rgba(255,255,255,${a})`));
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+  const softTex = radialTexture([[0, 1], [.25, .55], [.55, .16], [1, 0]]);
+  const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 5.5), new THREE.MeshBasicMaterial({ map: softTex, transparent: true, depthWrite: false, opacity: 0 }));
+  floorGlow.rotation.x = -Math.PI / 2; floorGlow.position.y = .002; floorGlow.renderOrder = 1;
+  scene.add(floorGlow);
+
+  // ---------- The lamp ----------
+  // One unit is about 10 cm. Base, glass and cap are lathed from these profiles.
+  const G = { Y0: 1.25, Y1: 1.74, Y2: 3.62, R0: .385, R1: .585, R2: .285, WALL: .03, LB: 1.31, LT: 3.42 };
+  const glassR = y => {
+    if (y < G.Y1) { const t = clamp((y - G.Y0) / (G.Y1 - G.Y0), 0, 1); return G.R0 + (G.R1 - G.R0) * Math.sin(t * Math.PI / 2); }
+    const t = clamp((y - G.Y1) / (G.Y2 - G.Y1), 0, 1); return G.R1 + (G.R2 - G.R1) * (2 * t * t - t * t * t);
+  };
+  const innerR = y => Math.max(0, glassR(y) - G.WALL);
+  const LAMP_H = 4.1, LOOK_Y = 2.05, BASE_R = .655;
+
+  const lamp = new THREE.Group();
+  scene.add(lamp);
+  const V2 = (x, y) => new THREE.Vector2(x, y);
+
+  function stripes(h, lo, hi) {
+    const c = document.createElement("canvas"); c.width = 4; c.height = h;
+    const x = c.getContext("2d");
+    for (let y = 0; y < h; y++) { const v = Math.round(lerp(lo, hi, Math.random() < .25 ? Math.random() : Math.random() * .45)); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(0, y, 4, 1); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  }
+  function ramp(topBright) {
+    const c = document.createElement("canvas"); c.width = 2; c.height = 64;
+    const x = c.getContext("2d"), g = x.createLinearGradient(0, 0, 0, 64);
+    g.addColorStop(0, topBright ? "#fff" : "#000"); g.addColorStop(topBright ? .35 : .7, "#2a2a2a"); g.addColorStop(1, topBright ? "#000" : "#fff");
+    x.fillStyle = g; x.fillRect(0, 0, 2, 64);
+    return new THREE.CanvasTexture(c);
+  }
+  // brushed aluminium: fine spun lines run around the lamp
+  const brushed = stripes(512, 150, 255);
+  const metal = (warmTop) => new THREE.MeshStandardMaterial({
+    color: 0xd4d7db, metalness: 1, roughness: .35, roughnessMap: brushed, bumpMap: brushed, bumpScale: .0012,
+    emissive: new THREE.Color(1, .45, .15), emissiveMap: ramp(warmTop), emissiveIntensity: 0, envMapIntensity: 1.1
+  });
+  const baseMat = metal(true), capMat = metal(false);
+
+  const basePts = [V2(0, 0), V2(.6, 0), V2(.638, .01), V2(.655, .035), V2(.655, .07), V2(.64, .09)];
+  for (let i = 1; i <= 24; i++) { const t = i / 24; basePts.push(V2(lerp(.64, .405, t), lerp(.09, 1.19, t))); }
+  basePts.push(V2(.418, 1.205), V2(.42, 1.235), V2(.405, 1.255), V2(.37, 1.255), V2(0, 1.24));
+  const base = new THREE.Mesh(new THREE.LatheGeometry(basePts, 96), baseMat);
+  base.castShadow = true;
+  lamp.add(base);
+
+  const capPts = [V2(0, 3.6), V2(.27, 3.56), V2(.302, 3.545), V2(.318, 3.555), V2(.322, 3.585)];
+  for (let i = 1; i <= 12; i++) { const t = i / 12; capPts.push(V2(lerp(.322, .178, t), lerp(3.585, 4.035, t))); }
+  capPts.push(V2(.17, 4.06), V2(.152, 4.078), V2(.12, 4.088), V2(0, 4.092));
+  const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 96), capMat);
+  cap.castShadow = true;
+  lamp.add(cap);
+
+  const glassPts = [V2(0, G.Y0)];
+  for (let i = 0; i <= 64; i++) { const y = lerp(G.Y0, G.Y2, i / 64); glassPts.push(V2(glassR(y), y)); }
+  glassPts.push(V2(0, G.Y2));
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, metalness: 0, roughness: .05, transmission: 1, ior: 1.5, thickness: .4,
+    attenuationColor: new THREE.Color(1, 1, 1), attenuationDistance: 6, specularIntensity: 1, envMapIntensity: .9
+  });
+  const glass = new THREE.Mesh(new THREE.LatheGeometry(glassPts, 128), glassMat);
+  glass.castShadow = true;
+  lamp.add(glass);
+
+  // The hidden bulb: a warm emissive disc under the liquid, and a point light inside the lamp.
+  const discMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(glassR(1.28) - .004, 64), discMat);
+  disc.rotation.x = -Math.PI / 2; disc.position.y = 1.28;
+  lamp.add(disc);
+  const bulbLight = new THREE.PointLight(0xffa35c, 0, 6, 2);
+  bulbLight.position.set(0, 1.5, 0);
+  lamp.add(bulbLight);
+
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTex, transparent: true, depthWrite: false, opacity: 0 }));
+  halo.position.set(0, 2.4, 0); halo.scale.set(2.9, 4.4, 1); halo.renderOrder = 2;
+  lamp.add(halo);
+
+  // ---------- Wax: raymarched metaballs on a proxy shaped like the liquid ----------
+  const NB = 16; // 12 blobs plus up to 4 shrinking ghosts of merged ones
+  const f4 = v => v.toFixed(4);
+  const waxFrag = `
+    #define NB ${NB}
+    uniform vec4 uB[NB];
+    uniform vec4 uS[NB];
+    uniform vec3 uC[NB];
+    uniform int uN;
+    uniform vec3 uCam, uBg, uAbs, uPoolC, uBulbC;
+    uniform float uBulb, uWarm, uGlow, uPoolY, uPoolT, uSkip, uPix;
+    varying vec3 vPos;
+    const float Y0 = ${f4(G.Y0)}, Y1 = ${f4(G.Y1)}, Y2 = ${f4(G.Y2)}, R0 = ${f4(G.R0)}, R1 = ${f4(G.R1)}, R2 = ${f4(G.R2)};
+    const float WALL = ${f4(G.WALL)}, LB = ${f4(G.LB)}, LT = ${f4(G.LT)};
+
+    float innerR(float y) {
+      float r;
+      if (y < Y1) { float t = clamp((y - Y0) / (Y1 - Y0), 0., 1.); r = R0 + (R1 - R0) * sin(t * 1.5707963); }
+      else { float t = clamp((y - Y1) / (Y2 - Y1), 0., 1.); r = R1 + (R2 - R1) * (2. * t * t - t * t * t); }
+      return r - WALL;
+    }
+    float interior(vec3 p) { return max((length(p.xz) - innerR(p.y)) * .84, max(LB - p.y, p.y - LT)); }
+    float smin(float a, float b, float k) { float h = max(k - abs(a - b), 0.) / k; return min(a, b) - h * h * k * .25; }
+    float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+    float blob(vec3 p, int i) {
+      vec4 b = uB[i];
+      vec3 d = p - b.xyz, s = uS[i].xyz;
+      float st = length(s);
+      if (st > .001) {
+        // stretch along the direction of travel, keeping the volume
+        vec3 n = s / st; float k = 1. + st, a = dot(d, n);
+        d = (d - n * a) * sqrt(k) + n * (a / k);
+        return (length(d) - b.w) / sqrt(k);
+      }
+      return length(d) - b.w;
+    }
+    float wax(vec3 p) {
+      float d = p.y - uPoolY;
+      for (int i = 0; i < NB; i++) { if (i >= uN) break; d = smin(d, blob(p, i), .17); }
+      return smax(d, interior(p), .05);
+    }
+    vec3 waxNormal(vec3 p) {
+      const vec2 k = vec2(1., -1.); const float e = .0025;
+      return normalize(k.xyy * wax(p + k.xyy * e) + k.yyx * wax(p + k.yyx * e) + k.yxy * wax(p + k.yxy * e) + k.xxx * wax(p + k.xxx * e));
+    }
+    vec3 waxColor(vec3 p, out float temp, out float pool) {
+      float w0 = exp(-max(p.y - uPoolY, 0.) * 18.);
+      vec3 c = uPoolC * w0; float ws = w0; temp = uPoolT * w0;
+      for (int i = 0; i < NB; i++) {
+        if (i >= uN) break;
+        float w = exp(-max(blob(p, i), 0.) * 18.);
+        c += uC[i] * w; temp += uS[i].w * w; ws += w;
+      }
+      temp /= ws; pool = w0 / ws;
+      return c / ws;
+    }
+    void main() {
+      if (uSkip > .5) { gl_FragColor = vec4(uBg, 1.); return; }
+      vec3 ro = vPos, rd = normalize(vPos - uCam);
+      // where the ray leaves the liquid: the interior is convex, so a bisection finds it
+      float a = dot(rd.xz, rd.xz), b = dot(ro.xz, rd.xz), c = dot(ro.xz, ro.xz) - (R1 - WALL) * (R1 - WALL);
+      float tFar = a > 1e-6 ? (-b + sqrt(max(b * b - a * c, 0.))) / a : 9.;
+      if (rd.y > 1e-4) tFar = min(tFar, (LT - ro.y) / rd.y); else if (rd.y < -1e-4) tFar = min(tFar, (LB - ro.y) / rd.y);
+      float lo = 0., hi = max(tFar, 0.) + .002;
+      for (int i = 0; i < 10; i++) { float m = .5 * (lo + hi); if (interior(ro + rd * m) < 0.) lo = m; else hi = m; }
+      float tL = lo;
+
+      float t = 0., dmin = 1e3, tmin = 0.; bool hit = false;
+      for (int i = 0; i < 64; i++) {
+        float d = wax(ro + rd * t);
+        if (d < dmin) { dmin = d; tmin = t; }
+        if (d < uPix * .4) { hit = true; break; }
+        t += max(d * .9, .003);
+        if (t > tL) break;
+      }
+      // the liquid on its own: the room seen through it, tinted, plus light scattered up from the bulb
+      float ym = ro.y + rd.y * tL * .5 - LB;
+      vec3 col = uBg * exp(-uAbs * tL) + uBulbC * uBulb * (exp(-ym * 2.3) * .42 + .05) * tL * (1. + uGlow * .7);
+      float edge = hit ? 1. : 1. - smoothstep(0., uPix * 2., dmin);
+      if (edge <= 0.) {
+        if (ro.y + rd.y * tL < LB + .003) discard; // straight down onto the bulb disc
+      } else {
+        float tw = hit ? t : tmin;
+        vec3 p = ro + rd * tw, n = waxNormal(p), v = -rd;
+        float temp, pool;
+        vec3 base = waxColor(p, temp, pool);
+        float ndv = clamp(dot(n, v), 0., 1.);
+        float fres = pow(1. - ndv, 3.) * (1. - pool);
+        float near = exp(-(p.y - LB) * 2.1);
+        float under = .5 - .5 * n.y;
+        float thick = clamp(-wax(p - n * .1) / .1, 0., 1.);
+        vec3 L = normalize(vec3(-.3, .85, .4));
+        float diff = .35 + .65 * pow(max(dot(n, L) * .5 + .5, 0.), 2.);
+        // darker, deeper colour at the rim; a brighter, hotter core where you look into the wax
+        vec3 deep = base * base * 1.05 + base * .04;
+        vec3 core = base * (1. + vec3(.12, .5, .35) * clamp(temp, 0., 1.3));
+        vec3 tone = mix(deep, core, smoothstep(.05, .9, ndv));
+        vec3 wc = tone * diff * .34;
+        // the bulb shining up through it
+        float warm = uBulb * (.3 + .55 * min(uWarm, 1.3));
+        vec3 sss = tone * (.35 + .65 * thick) * (.4 + .6 * under) * (.35 + 1.5 * near) * (.55 + .55 * clamp(temp, 0., 1.3));
+        wc += sss * warm * (1. + .4 * uGlow);
+        wc += core * uBulb * pool * (.35 + .3 * uGlow);
+        // a warm fresnel edge and a soft specular
+        wc += mix(base, vec3(1., .78, .5), .35) * fres * (.05 + .4 * warm);
+        vec3 h = normalize(L + v);
+        wc += vec3(1., .97, .92) * (pow(max(dot(n, h), 0.), 70.) * .55 + pow(max(dot(n, h), 0.), 10.) * .05);
+        float ymw = ro.y + rd.y * tw * .5 - LB;
+        wc = wc * exp(-uAbs * tw * .6) + uBulbC * uBulb * (exp(-ymw * 2.3) * .42 + .05) * tw * (1. + uGlow * .7) * .6;
+        col = mix(col, wc, edge);
+      }
+      gl_FragColor = vec4(col, 1.);
+      #include <tonemapping_fragment>
+      #include <encodings_fragment>
+    }`;
+  const waxU = {
+    uB: { value: Array.from({ length: NB }, () => new THREE.Vector4()) },
+    uS: { value: Array.from({ length: NB }, () => new THREE.Vector4()) },
+    uC: { value: Array.from({ length: NB }, () => new THREE.Color()) },
+    uN: { value: 0 }, uCam: { value: new THREE.Vector3() },
+    uBg: { value: new THREE.Color(BG.r, BG.g, BG.b) }, uAbs: { value: new THREE.Vector3() },
+    uPoolC: { value: new THREE.Color() }, uBulbC: { value: lin("#ff9a4a") },
+    uBulb: { value: 0 }, uWarm: { value: 0 }, uGlow: { value: 1 }, uPoolY: { value: G.LB + .045 }, uPoolT: { value: 0 }, uSkip: { value: 0 }, uPix: { value: .003 }
+  };
+  const proxyPts = [V2(0, G.LB)];
+  for (let i = 0; i <= 48; i++) { const y = lerp(G.LB, G.LT, i / 48); proxyPts.push(V2(innerR(y) + .004, y)); }
+  proxyPts.push(V2(0, G.LT));
+  const proxy = new THREE.Mesh(new THREE.LatheGeometry(proxyPts, 64), new THREE.ShaderMaterial({
+    uniforms: waxU,
+    vertexShader: "varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+    fragmentShader: waxFrag
+  }));
+  // The proxy is only ever seen through the glass, i.e. in the transmission pass; in the main pass the glass covers it.
+  const camLocal = new THREE.Vector3();
+  proxy.onBeforeRender = (r, s, cam) => {
+    waxU.uSkip.value = r.getRenderTarget() ? 0 : 1;
+    proxy.material.uniformsNeedUpdate = true;
+    proxy.worldToLocal(camLocal.copy(cam.position));
+    waxU.uCam.value.copy(camLocal);
+  };
+  lamp.add(proxy);
+
+  // ---------- Wax simulation ----------
+  // Temperatures are normalised: 0 is room temperature, 0.5 is neutral buoyancy, 1 is hot off the bulb.
+  const AMBIENT = 22, MAXB = 12;
+  const VOL = 6 * Math.pow(.165, 3); // the same wax whatever the blob count: one lump of radius ~.3
+  const R_REF = .165;
+  let blobs = [], ghosts = [], nextId = 1;
+  let on = false, bulb = 0, tempC = AMBIENT, glowAmt = settings.glow ? 1 : 0, simTime = 0, uptime = 0;
+  const lean = { x: 0, z: 0, vx: 0, vz: 0, tx: 0, tz: 0, held: false };
+  const liquidSpin = new THREE.Vector3(); // the liquid's rotation relative to the glass, lamp-local
+  const prevOmega = new THREE.Vector3();
+  const stats = { merges: 0, splits: 0 };
+  const rTarget = () => Math.cbrt(VOL / settings.blobs);
+
+  function makeBlob(x, y, z, r, T, ci) {
+    return { id: nextId++, x, y, z, vx: 0, vy: 0, vz: 0, r, T, ci, age: 9, ph: rnd(0, 100), dx: x, dy: y, dz: z, dr: r };
+  }
+  function seed(n) {
+    blobs = []; ghosts = [];
+    const r = Math.cbrt(VOL / n);
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996, rad = (i % 3) * .11;
+      blobs.push(makeBlob(Math.cos(a) * rad, G.LB + r * .6 + Math.floor(i / 3) * r * .95, Math.sin(a) * rad, r, 0, i % REAL.length));
+    }
+    // let the heap settle before anyone sees it
+    for (let i = 0; i < 480; i++) step(1 / 120, true);
+    blobs.forEach(b => { b.dx = b.x; b.dy = b.y; b.dz = b.z; b.dr = b.r; b.vx = b.vy = b.vz = 0; b.spd = 0; });
+  }
+
+  const tq = new THREE.Quaternion(), tqi = new THREE.Quaternion(), upL = new THREE.Vector3(), omega = new THREE.Vector3(), tv = new THREE.Vector3();
+  function leanQuat(q, x, z) {
+    const a = Math.hypot(x, z);
+    if (a < 1e-6) return q.identity();
+    return q.setFromAxisAngle(tv.set(z / a, 0, -x / a), a);
+  }
+
+  // quiet: only settle the wax (used when laying it out), leave the clock, the heat and the glass alone
+  function step(h, quiet) {
+    if (!quiet) {
+      simTime += h;
+      bulb += ((on ? 1 : 0) - bulb) * ease(h, on ? .35 : 1.1);
+      tempC += ((on ? settings.heat : AMBIENT) - tempC) * ease(h, on ? (reduce ? 8 : 6.5) : 26);
+      glowAmt += ((settings.glow ? 1 : 0) - glowAmt) * ease(h, .3);
+      if (on) uptime += h;
+      stepLean(h);
+    }
+    const warm = clamp((tempC - AMBIENT) / 38, 0, 1.6);
+    stepWax(h, quiet, warm);
+  }
+  function stepLean(h) {
+    // the lamp leans on a spring; when let go it wobbles back upright
+    const K = lean.held ? 70 : 34, C = lean.held ? 12 : reduce ? 9 : 3.2;
+    const ax = -K * (lean.x - (lean.held ? lean.tx : 0)) - C * lean.vx, az = -K * (lean.z - (lean.held ? lean.tz : 0)) - C * lean.vz;
+    lean.vx += ax * h; lean.vz += az * h;
+    lean.x += lean.vx * h; lean.z += lean.vz * h;
+    const lm = Math.hypot(lean.x, lean.z);
+    if (lm > .62) { lean.x *= .62 / lm; lean.z *= .62 / lm; }
+    leanQuat(tq, lean.x, lean.z);
+    tqi.copy(tq).invert();
+    upL.set(0, 1, 0).applyQuaternion(tqi);
+    // the liquid lags behind the glass when it turns, then viscosity drags it along
+    omega.set(lean.vz, 0, -lean.vx).applyQuaternion(tqi);
+    liquidSpin.addScaledVector(tv.subVectors(omega, prevOmega), -.6);
+    prevOmega.copy(omega);
+    const flow = settings.flow, visc = lerp(2.6, .8, flow);
+    liquidSpin.x *= Math.exp(-h * visc); liquidSpin.z *= Math.exp(-h * visc);
+    liquidSpin.y *= Math.exp(-h * visc * .45);
+  }
+  function stepWax(h, quiet, warm) {
+    const flow = settings.flow;
+    const drag = lerp(3.8, 1.05, flow) * (reduce ? 1.4 : 1);
+    const CY = 2.3;
+    for (const b of blobs) {
+      b.age += h;
+      const size = b.r / R_REF;
+      const hN = clamp((b.y - G.LB) / (G.LT - G.LB), 0, 1);
+      // the liquid is warm low down and cool near the cap, but never warm enough to float wax on its own;
+      // wax swaps heat with it slowly, except right over the bulb (fast heating) and under the cap (fast cooling)
+      const Tliq = Math.min(warm, 1.15) * (.42 - .35 * hN);
+      const near = Math.pow(clamp(1 - (b.y - b.r - G.LB - .03) / .15, 0, 1), 2);
+      const top = Math.pow(clamp(1 - (G.LT - (b.y + b.r * .6)) / .3, 0, 1), 2);
+      const heatIn = on ? warm * 2.2 * near : 0;
+      b.T = clamp(b.T + ((Tliq - b.T) * (.1 + .9 * top) + heatIn) / Math.max(.6, size) * h, 0, 1.4);
+      const buoy = (b.T - .5) * 1.6 * (.75 + .25 * size);
+      const px = b.x, py = b.y - CY, pz = b.z;
+      const ux = liquidSpin.y * pz - liquidSpin.z * py, uy = liquidSpin.z * px - liquidSpin.x * pz, uz = liquidSpin.x * py - liquidSpin.y * px;
+      const ir = innerR(b.y) || .3;
+      const conv = .015 * warm * (1 - 2 * (px * px + pz * pz) / (ir * ir));
+      // soft wax drifts a little; set wax does not
+      const soft = clamp((b.T - .12) * 3, 0, 1);
+      const wx = Math.sin(simTime * .37 + b.ph) * .035 * soft, wz = Math.cos(simTime * .29 + b.ph * 1.7) * .035 * soft;
+      const ox = b.x, oy = b.y, oz = b.z;
+      b.vx += (upL.x * buoy + (ux + wx - b.vx) * drag) * h;
+      b.vy += (upL.y * buoy + (uy + conv - b.vy) * drag) * h;
+      b.vz += (upL.z * buoy + (uz + wz - b.vz) * drag) * h;
+      b.x += b.vx * h; b.y += b.vy * h; b.z += b.vz * h;
+      contain(b);
+      b.ox = ox; b.oy = oy; b.oz = oz;
+    }
+
+    // touching blobs: hot ones may merge, cold ones stack
+    for (let i = 0; i < blobs.length; i++) for (let j = i + 1; j < blobs.length; j++) {
+      const A = blobs[i], B = blobs[j];
+      const dx = B.x - A.x, dy = B.y - A.y, dz = B.z - A.z, d = Math.hypot(dx, dy, dz) || 1e-4, rs = A.r + B.r;
+      if (d > rs) continue;
+      const soft = Math.min(A.T, B.T) > .18;
+      if (soft && !quiet && d < rs * .72 && A.age > 1.5 && B.age > 1.5 && blobs.length > 1) {
+        // wax mostly rejoins down in the pool; mid-flight merges are rarer
+        const n = blobs.length, want = settings.blobs;
+        const low = Math.min(A.y - A.r, B.y - B.r) < G.LB + .12;
+        const rate = (low ? .7 : .1) * (n > want ? 3 : n < want ? .25 : 1);
+        if (Math.random() < rate * h) { merge(A, B); return; }
+      }
+      const minD = rs * (soft ? (A.age < 1.5 || B.age < 1.5 ? .78 : .5) : .8);
+      if (d < minD) {
+        const push = (minD - d) * .5, nx = dx / d, ny = dy / d, nz = dz / d;
+        A.x -= nx * push; A.y -= ny * push; A.z -= nz * push;
+        B.x += nx * push; B.y += ny * push; B.z += nz * push;
+        const rv = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny + (B.vz - A.vz) * nz;
+        if (rv < 0) { A.vx += nx * rv * .5; A.vy += ny * rv * .5; A.vz += nz * rv * .5; B.vx -= nx * rv * .5; B.vy -= ny * rv * .5; B.vz -= nz * rv * .5; }
+        contain(A); contain(B);
+      }
+    }
+
+    // a big hot blob sometimes pinches in two
+    if (!quiet && blobs.length < MAXB && blobs.length + ghosts.length < NB) {
+      const rt = rTarget(), n = blobs.length;
+      for (const b of blobs) {
+        if (b.r < rt * 1.12 || b.T < .58 || b.age < 1.5) continue;
+        const rate = 1.4 * (b.r / rt - 1) * (n < settings.blobs ? 2 : .25);
+        if (Math.random() < rate * h) { split(b); break; }
+      }
+    }
+
+    // how far each blob really moved this step, after stacking (resting wax is pushed back each step)
+    for (const b of blobs) b.spd = lerp(b.spd || 0, Math.hypot(b.x - b.ox, b.y - b.oy, b.z - b.oz) / h, .1);
+    // what you see eases after the simulation, so merges and splits read as one smooth shape
+    const kp = ease(h, .1), kr = ease(h, .22);
+    for (const b of blobs) {
+      b.dx += (b.x - b.dx) * kp; b.dy += (b.y - b.dy) * kp; b.dz += (b.z - b.dz) * kp; b.dr += (b.r - b.dr) * kr;
+    }
+    for (const g of ghosts) {
+      const t = blobs.find(b => b.id === g.into);
+      if (t) { g.x += (t.dx - g.x) * ease(h, .18); g.y += (t.dy - g.y) * ease(h, .18); g.z += (t.dz - g.z) * ease(h, .18); }
+      g.r *= Math.exp(-h * 5.5);
+    }
+    ghosts = ghosts.filter(g => g.r > .012);
+  }
+
+  function contain(b) {
+    const lim = Math.max(0, innerR(b.y) - b.r * .95), rxz = Math.hypot(b.x, b.z);
+    if (rxz > lim) {
+      const nx = b.x / (rxz || 1), nz = b.z / (rxz || 1);
+      b.x = nx * lim; b.z = nz * lim;
+      const vn = b.vx * nx + b.vz * nz;
+      if (vn > 0) { b.vx -= vn * nx; b.vz -= vn * nz; }
+    }
+    const yMin = G.LB + b.r * .5, yMax = G.LT - b.r * .55;
+    if (b.y < yMin) { b.y = yMin; if (b.vy < 0) b.vy = 0; b.vx *= .985; b.vz *= .985; }
+    if (b.y > yMax) { b.y = yMax; if (b.vy > 0) b.vy = 0; }
+  }
+
+  function merge(A, B) {
+    const before = blobs.length;
+    const va = A.r ** 3, vb = B.r ** 3, v = va + vb;
+    const [big, small] = va >= vb ? [A, B] : [B, A];
+    for (const k of ["x", "y", "z", "vx", "vy", "vz", "T"]) big[k] = (A[k] * va + B[k] * vb) / v;
+    big.r = Math.cbrt(v); big.age = 0;
+    ghosts.push({ x: small.dx, y: small.dy, z: small.dz, r: small.dr, into: big.id, c: small.ci });
+    blobs = blobs.filter(b => b !== small);
+    stats.merges++;
+    event("merge", `${before} → ${blobs.length}`, "Two blobs just merged.");
+    bloop(false);
+  }
+  function split(b) {
+    const before = blobs.length;
+    const f = rnd(.32, .55), v = b.r ** 3;
+    const r1 = Math.cbrt(v * (1 - f)), r2 = Math.cbrt(v * f);
+    const dir = tv.set(upL.x + rnd(-.25, .25), upL.y, upL.z + rnd(-.25, .25)).normalize();
+    const child = makeBlob(b.x + dir.x * (r1 + r2) * .45, b.y + dir.y * (r1 + r2) * .45, b.z + dir.z * (r1 + r2) * .45, r2, b.T + .08, settings.wax === "mixed" ? Math.floor(Math.random() * REAL.length) : b.ci);
+    child.vx = b.vx + dir.x * .12; child.vy = b.vy + dir.y * .12; child.vz = b.vz + dir.z * .12;
+    child.dx = b.dx + dir.x * r1 * .3; child.dy = b.dy + dir.y * r1 * .3; child.dz = b.dz + dir.z * r1 * .3; child.dr = r2 * .4;
+    child.age = 0;
+    b.x -= dir.x * r2 * .2; b.y -= dir.y * r2 * .2; b.z -= dir.z * r2 * .2;
+    b.vx -= dir.x * .04; b.vy -= dir.y * .04; b.vz -= dir.z * .04;
+    b.r = r1; b.T -= .05; b.age = 0;
+    contain(child);
+    blobs.push(child);
+    stats.splits++;
+    event("split", `${before} → ${blobs.length}`, "A blob just split in two.");
+    bloop(true);
+  }
+
+  // ---------- Colours ----------
+  function luminance(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+    return .2126 * ch[0] + .7152 * ch[1] + .0722 * ch[2];
+  }
+  const REAL_LIN = REAL.map(w => lin(w.c));
+  let accentHex = REAL[0].c;
+  function applyWax(reshuffle) {
+    if (settings.wax === "mixed") {
+      if (reshuffle) blobs.forEach((b, i) => { b.ci = (i + Math.floor(Math.random() * REAL.length)) % REAL.length; });
+      accentHex = REAL[blobs.length ? blobs[0].ci : 0].c;
+    } else {
+      const i = REAL.findIndex(w => w.id === settings.wax);
+      blobs.forEach(b => { b.ci = i; });
+      accentHex = REAL[i].c;
+    }
+    const L = luminance(accentHex), root = document.documentElement.style;
+    root.setProperty("--flavor", accentHex);
+    root.setProperty("--on-flavor", 1.05 / (L + .05) >= (L + .05) / .061 ? "#ffffff" : "#1b1a18");
+    const c = lin(accentHex);
+    halo.material.color.copy(c).lerp(lin("#ffb070"), .5);
+    floorGlow.material.color.copy(c).lerp(lin("#ffb070"), .6);
+    wake();
+  }
+  function applyLiquid() {
+    const l = LIQUIDS.find(l => l.id === settings.liquid);
+    waxU.uAbs.value.set((1 - l.tint[0]) * l.dens * 1.6, (1 - l.tint[1]) * l.dens * 1.6, (1 - l.tint[2]) * l.dens * 1.6);
+    glassMat.attenuationColor.setRGB(lerp(1, l.tint[0], .5), lerp(1, l.tint[1], .5), lerp(1, l.tint[2], .5));
+    wake();
+  }
+  const waxName = () => (WAXES.find(w => w.id === settings.wax) || WAXES[0]).name;
+
+  // ---------- Status, log, stats ----------
+  const result = $("result");
+  let statusHold = 0, statusKey = "";
+  function setResult(html, pop) {
+    if (result.innerHTML === html) return;
+    result.innerHTML = html;
+    result.classList.remove("pop");
+    if (pop && !reduce) { void result.offsetWidth; result.classList.add("pop"); }
+  }
+  function say(html, hold = 3.2) { statusHold = hold; statusKey = ""; setResult(html, true); }
+  function ambientStatus() {
+    const settled = blobs.every(b => (b.spd || 0) < .01);
+    let key, html;
+    if (on && tempC < settings.heat - 3) { key = "warm"; html = `Warming up… <em>${Math.round(tempC)} °C</em>`; }
+    else if (on) { key = "flow"; html = "In full flow."; }
+    else if (tempC > AMBIENT + 3) { key = "cool"; html = `Cooling down… <em>${Math.round(tempC)} °C</em>`; }
+    else if (!settled) { key = "settle"; html = "Settling…"; }
+    else { key = "off"; html = uptime > 0 ? "Off. <em>Cold wax.</em>" : "Cold. <em>Switch it on.</em>"; }
+    setResult(html, key !== statusKey && statusKey !== "");
+    statusKey = key;
+  }
+  let log = [], logN = 0;
+  const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  const t0 = performance.now();
+  function event(kind, detail, status) {
+    logN++;
+    log.unshift({ n: logN, kind, detail, at: (performance.now() - t0) / 1000 });
+    log = log.slice(0, 6);
+    renderLog();
+    if (status && statusHold < 1.2) say(status, 2.6);
+  }
+  function renderLog() {
+    $("log").innerHTML = log.length
+      ? log.map(l => `<li><span>#${String(l.n).padStart(2, "0")}&nbsp; <b>${l.kind}</b>${l.detail ? " · " + l.detail : ""}</span><span>${clock(l.at)}</span></li>`).join("")
+      : '<li class="empty">Nothing yet.</li>';
+  }
+  function renderStats() {
+    $("sTemp").textContent = Math.round(tempC);
+    $("sBlobs").textContent = blobs.length;
+    $("sMerges").textContent = stats.merges;
+    $("sUp").textContent = clock(uptime);
+  }
+
+  // ---------- Power ----------
+  function syncPowerLabels() {
+    $("rollLabel").textContent = on ? "Switch off" : "Switch on";
+    $("bPower").textContent = on ? "Switch off" : "Switch on";
+  }
+  function setPower(v) {
+    if (on === v) return;
+    on = v;
+    ensureAudio();
+    click();
+    if (on) { hum(); uptime = 0; }
+    syncPowerLabels();
+    event(on ? "on" : "off", on ? `${watts()} W` : "", on ? "Switched on." : "Switched off.");
+    wake(true);
+  }
+  const watts = () => Math.round(40 + (settings.heat - 60));
+
+  const cover = $("cover");
+  let curtainBusy = false;
+  function curtainOn(fromEl) {
+    if (curtainBusy) return;
+    ensureAudio();
+    if (reduce) { setPower(true); return; }
+    curtainBusy = true;
+    const r = (fromEl || $("rollBtn")).getBoundingClientRect();
+    cover.style.setProperty("--cx", `${r.left + r.width / 2}px`);
+    cover.style.setProperty("--cy", `${r.top + r.height / 2}px`);
+    $("coverMeta").textContent = `${watts()} W · ${waxName()}`;
+    cover.classList.remove("out");
+    void cover.offsetWidth;
+    cover.classList.add("in");
+    setTimeout(() => { setPower(true); bulb = Math.max(bulb, .7); }, 470);
+    setTimeout(() => { cover.classList.add("out"); cover.classList.remove("in"); }, 640);
+    setTimeout(() => { cover.classList.remove("out"); curtainBusy = false; }, 1220);
+  }
+  const toggle = el => (on ? setPower(false) : curtainOn(el));
+
+  // ---------- Actions ----------
+  function swirl() {
+    ensureAudio();
+    liquidSpin.y += (Math.random() < .5 ? -1 : 1) * lerp(1.6, 2.6, settings.flow) * (reduce ? .5 : 1);
+    blobs.forEach(b => { b.vy += .04; });
+    event("swirl", "", "Swirling…");
+    wake(true);
+  }
+  function tip() {
+    ensureAudio();
+    const a = rnd(0, Math.PI * 2), k = reduce ? 1.1 : 2.3;
+    lean.vx += Math.cos(a) * k; lean.vz += Math.sin(a) * k;
+    bloop(false);
+    event("tip", "", "Tipped. Wobbling back.");
+    wake(true);
+  }
+  function reset() {
+    tempC = AMBIENT; uptime = 0;
+    lean.x = lean.z = lean.vx = lean.vz = 0;
+    liquidSpin.set(0, 0, 0); prevOmega.set(0, 0, 0);
+    seed(settings.blobs);
+    applyWax(true);
+    event("reset", `${blobs.length} cold`, "Back to the bottom, cold.");
+    wake(true);
+  }
+  function nudge(localHit) {
+    let best = null, bd = Infinity;
+    blobs.forEach(b => { const d = Math.hypot(b.x - localHit.x, b.y - localHit.y, b.z - localHit.z) - b.r; if (d < bd) { bd = d; best = b; } });
+    if (best) {
+      const dx = best.x - localHit.x, dz = best.z - localHit.z, m = Math.hypot(dx, dz) || 1;
+      const k = reduce ? .3 : .55;
+      best.vx += dx / m * k; best.vz += dz / m * k; best.vy += .12;
+      blobs.forEach(b => { if (b !== best && Math.hypot(b.x - best.x, b.y - best.y, b.z - best.z) < b.r + best.r + .1) { b.vx += dx / m * k * .4; b.vz += dz / m * k * .4; } });
+    }
+    // the lamp rocks away from the tap
+    const m = Math.hypot(localHit.x, localHit.z) || 1, k = reduce ? .25 : .6;
+    lean.vx -= localHit.x / m * k; lean.vz -= localHit.z / m * k;
+    bloop(true);
+    event("nudge", "", "Nudged.");
+    wake(true);
+  }
+
+  // ---------- Camera fit ----------
+  const ray = new THREE.Raycaster();
+  let lampPx = 400;
+  // The biggest empty part of the screen for a tall, narrow lamp: beside the title, or below it.
+  function freeRegion() {
+    const W = innerWidth, H = innerHeight, g = 14;
+    const shown = el => el && getComputedStyle(el).display !== "none";
+    const box = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+    const blocks = [];
+    // the title block, keeping room for the longest status line
+    const head = [".head .eyebrow", ".head h1", ".head .lede"].map(q => document.querySelector(q)).filter(shown).map(box);
+    const res = box(result), fs = parseFloat(getComputedStyle(result).fontSize);
+    head.push({ l: res.l, t: res.t, r: Math.max(res.r - (res.r - res.l) + fs * 9, res.l + result.scrollWidth), b: res.b });
+    blocks.push(head.reduce((a, b) => ({ l: Math.min(a.l, b.l), t: Math.min(a.t, b.t), r: Math.max(a.r, b.r), b: Math.max(a.b, b.b) })));
+    if (compact()) { const r = box(panelHead); blocks.push({ l: r.l - 13, t: r.t - 10, r: r.r + 13, b: r.b + 10 }); }
+    else blocks.push(box(panel));
+    [".live", ".foot", ".rollbtn"].map(q => document.querySelector(q)).filter(shown).forEach(el => blocks.push(box(el)));
+    const ui = getComputedStyle(document.querySelector(".ui"));
+    const edge = { l: parseFloat(ui.paddingLeft) * .5, r: W - parseFloat(ui.paddingRight) * .5, t: parseFloat(ui.paddingTop) * .5, b: H - parseFloat(ui.paddingBottom) * .5 };
+    const Ls = [edge.l, ...blocks.map(b => b.r + g)], Rs = [edge.r, ...blocks.map(b => b.l - g)];
+    const Ts = [edge.t, ...blocks.map(b => b.b + g)], Bs = [edge.b, ...blocks.map(b => b.t - g)];
+    let best = null, bestScore = -1;
+    for (const l of Ls) for (const r of Rs) for (const t of Ts) for (const b of Bs) {
+      if (r - l < 40 || b - t < 80 || l < edge.l - 1 || r > edge.r + 1 || t < edge.t - 1 || b > edge.b + 1) continue;
+      if (blocks.some(k => k.l < r && k.r > l && k.t < b && k.b > t)) continue;
+      // a lamp is about 0.46 as wide as it is tall, counting its halo and the shadow it throws
+      // and a centred lamp reads better than one squeezed against an edge
+      const score = Math.min(b - t, (r - l) / .46) * (1 - .5 * Math.abs((l + r) / 2 - W / 2) / W) + (r - l) * (b - t) * 1e-6;
+      if (score > bestScore) { bestScore = score; best = { l, r, t, b }; }
+    }
+    return best || { l: 0, r: W, t: H * .2, b: H };
+  }
+  function layout() {
+    const W = innerWidth, H = innerHeight;
+    renderer.setPixelRatio(pixelRatio);
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    if (!compact()) panel.classList.add("open");
+    panelHead.setAttribute("aria-expanded", panel.classList.contains("open"));
+
+    const R = freeRegion();
+    const rw = R.r - R.l, rh = R.b - R.t;
+    lampPx = Math.max(140, Math.min(rh * .92, rw / .44));
+    const cx = (R.l + R.r) / 2, cy = (R.t + R.b) / 2;
+    const el = 8 * Math.PI / 180, fov = camera.fov * Math.PI / 180;
+    // lamp plus a little floor
+    const dist = (LAMP_H + .25) * H / (2 * Math.tan(fov / 2) * lampPx);
+    camera.position.set(0, LOOK_Y + Math.sin(el) * dist, Math.cos(el) * dist);
+    camera.lookAt(0, LOOK_Y, 0);
+    // slide the picture so the lamp sits in the middle of the free area
+    camera.setViewOffset(W, H, W / 2 - cx, H / 2 - cy + lampPx * .015, W, H);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();
+    // one device pixel, in lamp units, for the wax's anti-aliased edge
+    waxU.uPix.value = 2 * dist * Math.tan(fov / 2) / (H * pixelRatio);
+    wake(true);
+  }
+
+  // ---------- Pointer: drag to tilt, tap to nudge ----------
+  const pointer = new THREE.Vector2();
+  const pickables = [glass, base, cap];
+  let press = null;
+  function setPointer(e) {
+    const r = canvas.getBoundingClientRect();
+    pointer.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(pointer, camera);
+  }
+  canvas.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    ensureAudio();
+    setPointer(e);
+    const hit = ray.intersectObjects(pickables, false)[0];
+    if (!hit) return;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    press = { x: e.clientX, y: e.clientY, obj: hit.object, point: hit.point.clone(), dragging: false };
+    canvas.style.cursor = "grabbing";
+    wake(true);
+  });
+  canvas.addEventListener("pointermove", e => {
+    setPointer(e);
+    if (press) {
+      const dx = e.clientX - press.x, dy = e.clientY - press.y;
+      if (!press.dragging && Math.hypot(dx, dy) > 7) { press.dragging = true; lean.held = true; say("Tilting…", 2); }
+      if (press.dragging) {
+        const k = 1.25 / lampPx;
+        let tx = dx * k, tz = dy * k;
+        const m = Math.hypot(tx, tz);
+        if (m > .55) { tx *= .55 / m; tz *= .55 / m; }
+        lean.tx = tx; lean.tz = tz;
+        wake(true);
+      }
+      return;
+    }
+    if (e.pointerType === "mouse") canvas.style.cursor = ray.intersectObjects(pickables, false).length ? "grab" : "default";
+  });
+  const endPointer = e => {
+    if (!press) return;
+    if (press.dragging) { lean.held = false; lean.tx = lean.tz = 0; }
+    else if (e.type === "pointerup") {
+      if (press.obj === glass) nudge(lamp.worldToLocal(press.point.clone()));
+      else { lean.vx += rnd(-.4, .4); lean.vz += rnd(-.4, .4); bloop(false); }
+    }
+    press = null;
+    canvas.style.cursor = "default";
+    wake(true);
+  };
+  canvas.addEventListener("pointerup", endPointer);
+  canvas.addEventListener("pointercancel", endPointer);
+
+  // ---------- Buttons and keys ----------
+  $("rollBtn").addEventListener("click", e => toggle(e.currentTarget));
+  $("bPower").addEventListener("click", e => toggle(e.currentTarget));
+  $("bSwirl").addEventListener("click", swirl);
+  $("bTip").addEventListener("click", tip);
+  $("bReset").addEventListener("click", reset);
+  document.addEventListener("keydown", e => {
+    if (!welcomed || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    const interactive = /^(INPUT|BUTTON|SELECT|TEXTAREA|A|LABEL)$/.test(e.target.tagName);
+    if ((e.key === " " || e.key === "Enter") && !interactive) { e.preventDefault(); toggle(); }
+  });
+
+  $("waxes").addEventListener("change", e => {
+    settings.wax = e.target.value; store.set("wax", settings.wax);
+    applyWax(true);
+  });
+  $("liquids").addEventListener("change", e => {
+    settings.liquid = e.target.value; store.set("liquid", settings.liquid);
+    applyLiquid();
+  });
+  $("heat").addEventListener("input", e => {
+    settings.heat = +e.target.value; store.set("heat", settings.heat);
+    $("heatVal").textContent = settings.heat + " °C";
+    wake();
+  });
+  $("flow").addEventListener("input", e => {
+    settings.flow = +e.target.value; store.set("flow", settings.flow);
+    $("flowVal").textContent = settings.flow.toFixed(2);
+    wake();
+  });
+  $("blobs").addEventListener("input", e => {
+    settings.blobs = +e.target.value; store.set("blobs", settings.blobs);
+    $("blobsVal").textContent = settings.blobs;
+    // cold wax is re-laid at the new count straight away; warm wax gets there by splitting and merging
+    if (!on && tempC < AMBIENT + 4) { seed(settings.blobs); applyWax(false); renderStats(); }
+    else while (blobs.length < settings.blobs && blobs.length < MAXB) { const big = blobs.reduce((a, b) => (b.r > a.r ? b : a)); big.T = Math.max(big.T, .7); split(big); }
+    wake();
+  });
+  $("glow").addEventListener("change", e => { settings.glow = e.target.checked; store.set("glow", settings.glow); wake(true); });
+  $("sound").addEventListener("change", e => { settings.sound = e.target.checked; store.set("sound", settings.sound); if (settings.sound) ensureAudio(); });
+  $("music").addEventListener("change", e => { settings.music = e.target.checked; store.set("music", settings.music); if (settings.music) startMusic(); else stopMusic(); });
+
+  // ---------- Loop ----------
+  // The lamp renders at 30 fps when calm and 60 while you play with it, and stops entirely once
+  // it is off, cold and still. A slow timer keeps the readings ticking while it sleeps.
+  let running = false, last = 0, smoothUntil = 0, sinceRender = 1, slowFrames = 0;
+  function wake(smooth) {
+    if (smooth) smoothUntil = performance.now() + 4000;
+    if (running || document.hidden) return;
+    running = true;
+    last = performance.now();
+    requestAnimationFrame(frame);
+  }
+  function isStill() {
+    return !on && bulb < .004 && !press && !curtainBusy && ghosts.length === 0 &&
+      Math.hypot(lean.x, lean.z, lean.vx, lean.vz) < 1e-3 && liquidSpin.length() < 1e-3 && Math.abs(glowAmt - (settings.glow ? 1 : 0)) < .01 &&
+      blobs.every(b => b.spd < .003 && Math.abs(b.dr - b.r) < 1e-3 && Math.hypot(b.dx - b.x, b.dy - b.y, b.dz - b.z) < 1e-3);
+  }
+  let acc = 0;
+  function simulate(dt, cap = .25) {
+    acc = Math.min(acc + dt, cap);
+    while (acc >= 1 / 120) { step(1 / 120); acc -= 1 / 120; }
+  }
+  const tmpC = new THREE.Color();
+  function syncScene() {
+    leanQuat(lamp.quaternion, lean.x, lean.z);
+    const lm = Math.hypot(lean.x, lean.z);
+    // pivot on the rim of the base, the edge it leans towards
+    if (lm > 1e-6) { tv.set(lean.x / lm * BASE_R, 0, lean.z / lm * BASE_R); lamp.position.copy(tv).sub(tv.clone().applyQuaternion(lamp.quaternion)); }
+    else lamp.position.set(0, 0, 0);
+    floorGlow.position.x = lamp.position.x; floorGlow.position.z = lamp.position.z;
+
+    const all = blobs.map(b => ({ x: b.dx, y: b.dy, z: b.dz, r: b.dr, v: b, ci: b.ci })).concat(ghosts.map(g => ({ x: g.x, y: g.y, z: g.z, r: g.r, v: null, ci: g.c })));
+    const n = Math.min(NB, all.length);
+    for (let i = 0; i < n; i++) {
+      const a = all[i];
+      waxU.uB.value[i].set(a.x, a.y, a.z, a.r);
+      if (a.v) {
+        const sx = a.v.vx * .3, sy = a.v.vy, sz = a.v.vz * .3;
+        const sp = Math.hypot(sx, sy, sz), st = Math.min(sp * 1.9, .55) * (reduce ? .5 : 1);
+        if (sp > 1e-4) waxU.uS.value[i].set(sx / sp * st, sy / sp * st, sz / sp * st, a.v.T);
+        else waxU.uS.value[i].set(0, 0, 0, a.v.T);
+      } else waxU.uS.value[i].set(0, 0, 0, .5);
+      waxU.uC.value[i].copy(REAL_LIN[a.ci] || REAL_LIN[0]);
+    }
+    waxU.uN.value = n;
+    waxU.uPoolC.value.copy(REAL_LIN[blobs.length ? blobs.reduce((a, b) => (b.r > a.r ? b : a)).ci : 0]);
+    const warm = clamp((tempC - AMBIENT) / 38, 0, 1.6);
+    waxU.uPoolT.value = warm * .8;
+    waxU.uBulb.value = bulb; waxU.uWarm.value = warm; waxU.uGlow.value = glowAmt;
+
+    const l = LIQUIDS.find(l => l.id === settings.liquid);
+    const warmC = tmpC.copy(lin("#ff9a4a")).multiply(new THREE.Color(l.tint[0], l.tint[1], l.tint[2]));
+    discMat.color.setRGB(.05, .045, .04).lerp(warmC.multiplyScalar(2.4), bulb);
+    bulbLight.intensity = bulb * (1.2 + glowAmt * .6);
+    baseMat.emissiveIntensity = bulb * .16 * (.7 + .5 * glowAmt);
+    capMat.emissiveIntensity = bulb * .3 * (.7 + .5 * glowAmt);
+    halo.material.opacity = bulb * glowAmt * (.32 + .12 * Math.min(warm, 1));
+    floorGlow.material.opacity = bulb * (.12 + .2 * glowAmt);
+  }
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min((now - last) / 1000, .25); last = now;
+    simulate(dt);
+    statusHold -= dt;
+    if (statusHold <= 0) ambientStatus();
+    // dynamic resolution: if frames keep running long, draw fewer pixels
+    if (dt > 1 / 24 && dt < .2) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
+    if (slowFrames > 45 && pixelRatio > 1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; layout(); }
+    sinceRender += dt;
+    if (now < smoothUntil || sinceRender >= 1 / 31) { syncScene(); renderer.render(scene, camera); sinceRender = 0; }
+    if (isStill()) { running = false; syncScene(); renderer.render(scene, camera); return; }
+    requestAnimationFrame(frame);
+  }
+  setInterval(() => {
+    if (!running && !document.hidden) { simulate(.5, .5); if (!isStill()) wake(); if (statusHold <= 0) ambientStatus(); }
+    renderStats();
+  }, 500);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
+
+  // ---------- Boot ----------
+  seed(settings.blobs);
+  applyWax(true);
+  applyLiquid();
+  syncPowerLabels();
+  ambientStatus();
+  renderLog();
+  renderStats();
+  layout();
+  addEventListener("resize", layout);
+  addEventListener("orientationchange", () => setTimeout(layout, 250));
+  if (document.fonts) document.fonts.ready.then(layout);
+  wake();
+})();
+</script>
+</body>
+</html>
